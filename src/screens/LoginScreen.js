@@ -7,7 +7,9 @@ const LoginScreen = () => {
 
   const handleLogin = () => {
     // Placeholder for authentication API call
-    console.log('Login pressed with username:', username);
+    if (__DEV__) {
+      console.log('Login pressed');
+    }
   };
 
   return (
