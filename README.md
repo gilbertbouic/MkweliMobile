@@ -218,10 +218,11 @@ export default Config;
 
 The mobile app connects to the following backend endpoints:
 
-- `POST /api/auth/login` - User authentication
-- `POST /api/screening` - Perform sanctions screening
+- `POST /api/screen` - Perform sanctions screening
 - `GET /api/reports` - Retrieve screening reports
 - Additional endpoints as defined by the MkweliAML backend
+
+> **Note**: Authentication endpoints (e.g., `/api/auth/login`) may be required depending on your backend configuration. The current app includes a login screen placeholder that can be integrated with your backend's authentication system.
 
 ### Network Configuration Tips
 
