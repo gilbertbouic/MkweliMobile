@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { screenClient, fetchReports } from '../src/services/apiService';
-import Config from '../src/config';
+import Config from '../src/config.js';
 
 // Mock axios
 jest.mock('axios');
