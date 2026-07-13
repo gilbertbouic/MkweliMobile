@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# React Native / Metro
+.metro-health-check*
+*.jsbundle
+.expo/
+dist/
+web-build/
+
+# Android build outputs & caches (keep release APKs under android/app/*.apk)
+android/.gradle/
+android/build/
+android/app/build/
+android/app/.cxx/
+android/local.properties
+*.hprof
+.cxx/
+
+# iOS
+ios/Pods/
+ios/build/
+*.xcworkspace
+!default.xcworkspace
+*.xcuserstate
+DerivedData/
+
+# Native / tooling
+*.keystore
+!android/app/debug.keystore
+!android/keystores/*.keystore
+
+# Env / secrets (keep committed if project already relies on them)
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+*.swp
+*~
+.gradle/
+
+# Logs & coverage
+*.log
+npm-debug.*
+coverage/
+.jest/
+
+# Temporary
+*.tmp
+*.temp
+/tmp/
