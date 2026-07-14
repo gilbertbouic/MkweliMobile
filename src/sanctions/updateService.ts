@@ -9,6 +9,7 @@
 import RNFS from 'react-native-fs';
 import {
   EXTRACTORS,
+  CSV_EXTRACTORS,
   extractNamesFromChunk,
   type ExtractorFn,
 } from './extractors';
@@ -135,7 +136,8 @@ async function downloadXmlToFile(
 }
 
 /**
- * Extract names from a local XML file, using chunked reads for large files.
+ * Extract names from a local file (CSV or XML), using chunked reads for large XML files.
+ * CSV files are typically small enough to read in full.
  */
 async function extractNamesFromFile(
   source: SanctionsSource,
@@ -143,23 +145,39 @@ async function extractNamesFromFile(
 ): Promise<string[]> {
   const stat = await RNFS.stat(path);
   const size = Number(stat.size);
+  const isCSV = source.tempFileName.toLowerCase().endsWith('.csv');
 
   if (size <= LARGE_FILE_THRESHOLD) {
-    const xml = await RNFS.readFile(path, 'utf8');
-    if (!xml.includes('<') || !xml.includes('>')) {
-      throw new Error('Downloaded content does not look like XML');
+    const content = await RNFS.readFile(path, 'utf8');
+
+    // Detect format and get appropriate extractor
+    let extractor: ExtractorFn | undefined;
+    let formatName = '';
+
+    if (isCSV) {
+      extractor = CSV_EXTRACTORS[source.id];
+      formatName = 'CSV';
+    } else {
+      extractor = EXTRACTORS[source.id];
+      formatName = 'XML';
     }
-    const extractor: ExtractorFn | undefined = EXTRACTORS[source.id];
+
     if (!extractor) {
-      throw new Error(`No extractor for source ${source.id}`);
+      throw new Error(`No ${formatName} extractor for source ${source.id}`);
     }
-    const names = extractor(xml);
+
+    const names = extractor(content);
     if (names.length === 0) {
       throw new Error(
-        'No names extracted from XML (parse failed or empty list)',
+        `No names extracted from ${formatName} (parse failed or empty list)`,
       );
     }
     return names;
+  }
+
+  // Large file — use chunked processing (XML only; CSV is always small)
+  if (isCSV) {
+    throw new Error('CSV file unexpectedly large (> 8MB)');
   }
 
   const all = new Set<string>();

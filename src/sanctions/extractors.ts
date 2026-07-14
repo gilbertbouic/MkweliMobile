@@ -1,7 +1,59 @@
 /**
- * Extract person/entity names from official sanctions XML formats.
- * Uses targeted regex so large files need not be fully parsed into objects.
+ * Extract person/entity names from official sanctions XML and CSV formats.
+ * Uses targeted regex for XML; simple line-based parsing for CSV.
  */
+
+/**
+ * Parse a CSV line respecting quoted fields and escaped quotes.
+ * Handles: "Smith, John" as a single field, "" as escaped quote.
+ */
+function parseCSVLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < line.length) {
+    const char = line[i];
+
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        // Escaped quote: "" → "
+        current += '"';
+        i += 2;
+      } else {
+        // Toggle quote mode
+        inQuotes = !inQuotes;
+        i++;
+      }
+    } else if (char === ',' && !inQuotes) {
+      // End of field
+      fields.push(current.trim());
+      current = '';
+      i++;
+    } else {
+      current += char;
+      i++;
+    }
+  }
+
+  // Add last field
+  fields.push(current.trim());
+  return fields;
+}
+
+/**
+ * Parse CSV field — remove outer quotes if present.
+ */
+function parseCSVField(field: string): string {
+  if (!field) return '';
+  const trimmed = field.trim();
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    // Already parsed by parseCSVLine, but handle it here too
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
 
 function normalizeName(raw: string, minLength = 1): string | null {
   const name = raw
@@ -205,6 +257,91 @@ export function extractUsaNames(xml: string): string[] {
 }
 
 /**
+ * EU OFSI sanctions list CSV — "name" or "wholename" column.
+ */
+export function extractEuCsvNames(csv: string): string[] {
+  const names = new Set<string>();
+  const lines = csv.split('\n');
+  if (lines.length < 2) return [];
+
+  // Find header row and name column index
+  const headerLine = lines[0];
+  const headers = parseCSVLine(headerLine).map(h => h.toLowerCase());
+  let nameColumnIndex = headers.indexOf('name');
+  if (nameColumnIndex === -1) {
+    nameColumnIndex = headers.indexOf('wholename');
+  }
+  if (nameColumnIndex === -1) return [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const fields = parseCSVLine(line);
+    if (nameColumnIndex >= fields.length) continue;
+    const name = parseCSVField(fields[nameColumnIndex]);
+    addName(names, name);
+  }
+
+  return Array.from(names);
+}
+
+/**
+ * UK FCDO sanctions list CSV — "name" or "entity name" column.
+ */
+export function extractUkCsvNames(csv: string): string[] {
+  const names = new Set<string>();
+  const lines = csv.split('\n');
+  if (lines.length < 2) return [];
+
+  const headerLine = lines[0];
+  const headers = parseCSVLine(headerLine).map(h => h.toLowerCase());
+  let nameColumnIndex = headers.indexOf('name');
+  if (nameColumnIndex === -1) {
+    nameColumnIndex = headers.indexOf('entity name');
+  }
+  if (nameColumnIndex === -1) return [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const fields = parseCSVLine(line);
+    if (nameColumnIndex >= fields.length) continue;
+    const name = parseCSVField(fields[nameColumnIndex]);
+    addName(names, name);
+  }
+
+  return Array.from(names);
+}
+
+/**
+ * USA OFAC SDN CSV — "name" or "entity_name" column.
+ */
+export function extractUsaCsvNames(csv: string): string[] {
+  const names = new Set<string>();
+  const lines = csv.split('\n');
+  if (lines.length < 2) return [];
+
+  const headerLine = lines[0];
+  const headers = parseCSVLine(headerLine).map(h => h.toLowerCase());
+  let nameColumnIndex = headers.indexOf('name');
+  if (nameColumnIndex === -1) {
+    nameColumnIndex = headers.indexOf('entity_name');
+  }
+  if (nameColumnIndex === -1) return [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    const fields = parseCSVLine(line);
+    if (nameColumnIndex >= fields.length) continue;
+    const name = parseCSVField(fields[nameColumnIndex]);
+    addName(names, name);
+  }
+
+  return Array.from(names);
+}
+
+/**
  * Stream-friendly extraction from a growing buffer for large files.
  * Returns { names found in complete tags, remainder to keep for next chunk }.
  */
@@ -245,7 +382,7 @@ export function extractNamesFromChunk(
   return {names, carry: nextCarry};
 }
 
-export type ExtractorFn = (xml: string) => string[];
+export type ExtractorFn = (data: string) => string[];
 
 export const EXTRACTORS: Record<string, ExtractorFn> = {
   un: extractUnNames,
@@ -253,3 +390,11 @@ export const EXTRACTORS: Record<string, ExtractorFn> = {
   uk: extractUkNames,
   usa: extractUsaNames,
 };
+
+export const CSV_EXTRACTORS: Record<string, ExtractorFn> = {
+  eu: extractEuCsvNames,
+  uk: extractUkCsvNames,
+  usa: extractUsaCsvNames,
+};
+
+

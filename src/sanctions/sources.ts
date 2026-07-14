@@ -15,6 +15,12 @@ export interface SanctionsSource {
 
 export const SANCTIONS_SOURCES: SanctionsSource[] = [
   {
+    id: 'usa',
+    label: 'USA (OFAC SDN)',
+    url: 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN.CSV',
+    tempFileName: 'usa-sdn.csv',
+  },
+  {
     id: 'un',
     label: 'UN',
     url: 'https://scsanctions.un.org/resources/xml/en/name/consolidated.xml',
@@ -23,20 +29,14 @@ export const SANCTIONS_SOURCES: SanctionsSource[] = [
   {
     id: 'eu',
     label: 'EU',
-    url: 'https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList/content?token=dG9rZW4tMjAxNw',
-    tempFileName: 'eu-full-sanctions.xml',
+    url: 'https://webgate.ec.europa.eu/fsd/fsf/public/files/csvFullSanctionsList/content?token=dG9rZW4tMjAxNw',
+    tempFileName: 'eu-full-sanctions.csv',
   },
   {
     id: 'uk',
     label: 'UK',
-    url: 'https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.xml',
-    tempFileName: 'uk-sanctions-list.xml',
-  },
-  {
-    id: 'usa',
-    label: 'USA (OFAC SDN)',
-    url: 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/SDN_ENHANCED.XML',
-    tempFileName: 'usa-sdn-enhanced.xml',
+    url: 'https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.csv',
+    tempFileName: 'uk-sanctions-list.csv',
   },
 ];
 

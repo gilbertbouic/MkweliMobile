@@ -7,6 +7,9 @@ import {
   extractUkNames,
   extractUnNames,
   extractUsaNames,
+  extractEuCsvNames,
+  extractUkCsvNames,
+  extractUsaCsvNames,
 } from '../src/sanctions/extractors';
 
 describe('Sanctions XML extractors', () => {
@@ -148,3 +151,73 @@ describe('Sanctions XML extractors', () => {
     expect(names).toEqual(['Only']);
   });
 });
+
+describe('Sanctions CSV extractors', () => {
+  test('extractEuCsvNames parses EU sanctions CSV', () => {
+    const csv = `name,type,designation_date
+Saddam Hussein Al-Tikriti,individual,2001-01-01
+Abu Ali,individual,2001-02-01`;
+    const names = extractEuCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining(['Saddam Hussein Al-Tikriti', 'Abu Ali']),
+    );
+  });
+
+  test('extractEuCsvNames handles quoted fields', () => {
+    const csv = `name,type,designation_date
+"Hussein, Saddam",individual,2001-01-01
+"Corp, Evil Ltd.",entity,2001-02-01`;
+    const names = extractEuCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining(['Hussein, Saddam', 'Corp, Evil Ltd.']),
+    );
+  });
+
+  test('extractUkCsvNames parses UK sanctions CSV', () => {
+    const csv = `name,type,designation_date
+Vladimir Vladimirovich PUTIN,individual,2022-02-01
+Rosneft PAO,entity,2022-02-15`;
+    const names = extractUkCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining(['Vladimir Vladimirovich PUTIN', 'Rosneft PAO']),
+    );
+  });
+
+  test('extractUsaCsvNames parses OFAC SDN CSV', () => {
+    const csv = `name,type,entity_number,designations
+"PUTIN, Vladimir Vladimirovich",individual,12345,"CEO Russia"
+ROSNEFT PAO,entity,67890,"Russian Energy"`;
+    const names = extractUsaCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'PUTIN, Vladimir Vladimirovich',
+        'Vladimir Vladimirovich PUTIN',
+        'ROSNEFT PAO',
+      ]),
+    );
+  });
+
+  test('CSV extractors handle empty lines', () => {
+    const csv = `name,type
+John Smith,individual
+
+Jane Doe,individual`;
+    const names = extractUsaCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining(['John Smith', 'Jane Doe']),
+    );
+  });
+
+  test('CSV extractors skip whitespace-only names', () => {
+    const csv = `name,type
+John Smith,individual
+   ,individual
+Jane Doe,individual`;
+    const names = extractUsaCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining(['John Smith', 'Jane Doe']),
+    );
+    expect(names.length).toBe(2);
+  });
+});
+
