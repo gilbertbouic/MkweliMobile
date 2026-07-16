@@ -7,7 +7,7 @@ Distributed via **GitHub** as a signed APK — **not** on the Google Play Store.
 |---|---|
 | **Version** | **1.0.8** (`versionCode` 8) |
 | **Package** | `com.mkwelimobile` |
-| **Release APK** | [`android/app/Mkweli_v1.0.8.apk`](android/app/Mkweli_v1.0.8.apk) (Git LFS) |
+| **Download APK** | **[GitHub Releases · v1.0.8](https://github.com/gilbertbouic/MkweliMobile/releases/tag/v1.0.8)** |
 | **Stack** | React Native 0.83 · Hermes · minSdk 24 |
 
 ## Features
