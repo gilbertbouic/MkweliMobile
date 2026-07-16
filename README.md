@@ -1,98 +1,106 @@
-# MkweliMobile
+# Mkweli Mobile
 
-Mobile sanctions screening app built with React Native.
+Open-source **AML name screening** app for Android (and iOS).  
+Distributed via **GitHub** as a signed APK — **not** on the Google Play Store. Works on Google and non-Google devices (including Huawei without GMS).
 
-## Release
+| | |
+|---|---|
+| **Version** | **1.0.8** (`versionCode` 8) |
+| **Package** | `com.mkwelimobile` |
+| **Release APK** | [`android/app/Mkweli_v1.0.8.apk`](android/app/Mkweli_v1.0.8.apk) (Git LFS) |
+| **Stack** | React Native 0.83 · Hermes · minSdk 24 |
 
-- Release version: `v1.0.8`
-- Android `versionName`: `1.0.8`
-- Android `versionCode`: `8`
-- iOS `MARKETING_VERSION`: `1.0.8`
-- iOS `CURRENT_PROJECT_VERSION`: `8`
+## Features
 
-## What This App Does
+- Screen a person or organisation name against **UN**, **EU**, **UK**, and **USA (OFAC SDN)** lists
+- **Exact** match only (case-insensitive, trimmed)
+- **Auto-update every 30 days** on open when lists are stale or still seed data (manual **Update lists** anytime)
+- Offline screening after the first successful download (or using bundled seed names)
+- UI languages: **EN / FR / PT / ES**
+- Temporary download files are deleted after parse; per-source failures keep the previous good list
 
-- Screens names against sanctions data bundled in `assets/sanctions/` and `src/sanctions/`.
-- Supports multilingual UI strings through `src/i18n/`.
-- Runs on Android and iOS with React Native `0.83.1`.
-- Routes startup safely for Google and non-Google device profiles in Android native initialization.
+### List sources
 
-## Prerequisites
+| Source | Format | Notes |
+|--------|--------|--------|
+| USA (OFAC SDN) | CSV | Official Treasury/OFAC URLs first; **OpenSanctions CDN** fallback when OFAC hosts are blocked |
+| UN | XML | UN Security Council consolidated list |
+| EU | CSV (`;`) | EU FSD full list (`Naal_wholename`) |
+| UK | CSV | OFSI list (`Name 1`…`Name 6`) |
 
-- Node.js `>=20`
-- npm
-- Android Studio + Android SDK (for Android builds)
-- Xcode + CocoaPods (for iOS builds)
+## Install the APK (end users)
 
-## Install
+1. Download **[Mkweli_v1.0.8.apk](https://github.com/gilbertbouic/MkweliMobile/raw/main/android/app/Mkweli_v1.0.8.apk)** from this repository (Git LFS).
+2. On Android, allow install from the browser/file manager if prompted.
+3. Open the app on Wi‑Fi for the first automatic list update (USA can take a minute if using the CDN fallback).
+
+ABIs included: **armeabi-v7a** + **arm64-v8a** (typical phones).
+
+## Develop
+
+### Prerequisites
+
+- Node.js **≥ 20**, npm  
+- Android SDK / Android Studio (Android)  
+- Xcode + CocoaPods (iOS, macOS only)
+
+### Setup
 
 ```bash
-cd /home/gil/MkweliMobile
-npm install
+git clone https://github.com/gilbertbouic/MkweliMobile.git
+cd MkweliMobile
+git lfs pull          # required for the release APK
+npm install           # runs postinstall patch for react-native-fs
 ```
 
-For iOS dependencies:
+### Run
 
 ```bash
-cd /home/gil/MkweliMobile/ios
-bundle install
-bundle exec pod install
+npm start             # Metro
+npm run android       # another terminal
+# npm run ios         # macOS only
 ```
 
-## Run In Development
-
-Start Metro:
+### Test
 
 ```bash
-cd /home/gil/MkweliMobile
-npm start
-```
-
-Run Android (new terminal):
-
-```bash
-cd /home/gil/MkweliMobile
-npm run android
-```
-
-Run iOS (macOS only, new terminal):
-
-```bash
-cd /home/gil/MkweliMobile
-npm run ios
-```
-
-## Build
-
-Android debug/release helper scripts are available at project root, including:
-
-- `build-apk.sh`
-- `build-apk-quick.sh`
-- `build-apk-gradle9.sh`
-- `final-integration-build.sh`
-
-Primary Android Gradle module path: `android/app/`.
-
-## Test
-
-Run the Jest test suite:
-
-```bash
-cd /home/gil/MkweliMobile
 npm test
 ```
 
-## Project Structure
+### Release APK (maintainers)
 
-- `App.tsx`: main app UI and flow
-- `src/sanctions/`: sanctions domain logic
-- `src/i18n/`: localization resources
-- `android/`: Android native project
-- `ios/`: iOS native project
-- `__tests__/`: automated tests
-- `assets/sanctions/`: bundled sanctions source files
+Signing is configured via `android/gradle.properties` (`MYAPP_UPLOAD_*`) and the keystore under `android/keystores/` (not always published).
+
+```bash
+cd android
+./gradlew :app:assembleRelease
+# Output: android/app/build/outputs/apk/release/app-release.apk
+cp app/build/outputs/apk/release/app-release.apk app/Mkweli_v1.0.8.apk
+```
+
+`postinstall` applies `scripts/patch-rnfs-promise.js` so `react-native-fs` works with RN 0.83 (null error codes + multi-hop redirects).
+
+## Project layout
+
+```
+App.tsx                 # Main UI, auto-update on open
+InstructionsScreen.tsx  # How to use
+sanctions-data.ts       # Screening API + seed load
+src/sanctions/          # Download, parse, store (NDJSON)
+src/i18n/               # EN / FR / PT / ES
+assets/sanctions/       # Bundled seed name lists (*-names.json only)
+android/                # Android project + release APK
+ios/                    # iOS project
+__tests__/              # Jest tests
+scripts/                # postinstall patches
+```
 
 ## Notes
 
-- For Android release signing, use keystore properties expected by `android/app/build.gradle`.
-- Build and verification guides are documented in the root markdown files (for example `BUILD-AND-RUN-GUIDE.md`, `APK-BUILD-GUIDE.md`, and `TESTING-GUIDE.md`).
+- New Architecture is **off** (`newArchEnabled=false`) for stability with current native modules.
+- No Google Play Services dependency — suitable for sideload / open-source distribution.
+- Screening is **not** fuzzy matching and is **not** a full KYC system; follow your organisation’s compliance policy.
+
+## License
+
+See repository ownership on GitHub: [gilbertbouic/MkweliMobile](https://github.com/gilbertbouic/MkweliMobile).
