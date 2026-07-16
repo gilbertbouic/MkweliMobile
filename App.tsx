@@ -1,14 +1,16 @@
 /**
  * Mkweli AML Sanctions Screening
  * Screens names against UN / EU / UK / USA lists.
- * Lists can be refreshed on demand from official sources.
+ * Lists auto-refresh every 30 days on open (and on demand).
  *
  * @format
  */
 
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
+  AppState,
+  type AppStateStatus,
   Image,
   SafeAreaView,
   ScrollView,
@@ -71,6 +73,8 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
   const [progress, setProgress] = useState<UpdateProgress | null>(null);
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
   const isDarkMode = useColorScheme() === 'dark';
+  const updatingRef = useRef(false);
+  const autoStartedRef = useRef(false);
 
   const formatDate = useCallback(
     (iso: string | null): string => {
@@ -86,22 +90,100 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
     [t, locale],
   );
 
-  const refreshMeta = useCallback(async () => {
+  const refreshMeta = useCallback(async (): Promise<SanctionsMeta | null> => {
     try {
       const m = await getSanctionsMeta();
       setMeta(m);
+      return m;
     } catch {
-      // ignore
+      return null;
     }
   }, []);
+
+  const runListUpdate = useCallback(
+    async (mode: 'manual' | 'auto') => {
+      if (updatingRef.current) {
+        return;
+      }
+      updatingRef.current = true;
+      setUpdating(true);
+      setUpdateMessage(
+        mode === 'auto' ? t('autoUpdating') : null,
+      );
+      setProgress(null);
+      try {
+        const {meta: newMeta, results, totalNames} = await updateSanctionsLists(
+          p => setProgress(p),
+        );
+        setMeta(newMeta);
+        const ok = results.filter(r => r.ok).length;
+        const fail = results.filter(r => !r.ok);
+        if (fail.length) {
+          setUpdateMessage(
+            t(mode === 'auto' ? 'autoUpdatePartial' : 'updatePartial', {
+              ok,
+              total: results.length,
+              names: totalNames.toLocaleString(locale),
+              failed: fail.map(f => `${f.label} (${f.error})`).join('; '),
+            }),
+          );
+        } else {
+          setUpdateMessage(
+            t(mode === 'auto' ? 'autoUpdateOk' : 'updateOk', {
+              ok,
+              total: results.length,
+              names: totalNames.toLocaleString(locale),
+            }),
+          );
+        }
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : String(err ?? 'Update failed');
+        setUpdateMessage(
+          t(mode === 'auto' ? 'autoUpdateFailed' : 'updateFailed', {
+            error: message,
+          }),
+        );
+        await refreshMeta();
+      } finally {
+        updatingRef.current = false;
+        setUpdating(false);
+      }
+    },
+    [locale, refreshMeta, t],
+  );
+
+  /** Auto-download when lists are bundled seed or older than 30 days. */
+  const maybeAutoUpdate = useCallback(
+    async (current: SanctionsMeta | null) => {
+      if (!current || updatingRef.current) {
+        return;
+      }
+      if (!isListsStale(current)) {
+        return;
+      }
+      await runListUpdate('auto');
+    },
+    [runListUpdate],
+  );
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         await initSanctionsData();
-        if (!cancelled) {
-          await refreshMeta();
+        if (cancelled) {
+          return;
+        }
+        const m = await refreshMeta();
+        if (cancelled) {
+          return;
+        }
+        setBooting(false);
+        // First open (and any open with stale lists): download + parse automatically
+        if (!autoStartedRef.current) {
+          autoStartedRef.current = true;
+          await maybeAutoUpdate(m);
         }
       } finally {
         if (!cancelled) {
@@ -112,7 +194,22 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
     return () => {
       cancelled = true;
     };
-  }, [refreshMeta]);
+  }, [maybeAutoUpdate, refreshMeta]);
+
+  // Re-check when returning to the app (covers multi-day backgrounding)
+  useEffect(() => {
+    const onState = (state: AppStateStatus) => {
+      if (state !== 'active' || updatingRef.current) {
+        return;
+      }
+      void (async () => {
+        const m = await refreshMeta();
+        await maybeAutoUpdate(m);
+      })();
+    };
+    const sub = AppState.addEventListener('change', onState);
+    return () => sub.remove();
+  }, [maybeAutoUpdate, refreshMeta]);
 
   const handleSearch = () => {
     setLoading(true);
@@ -122,46 +219,8 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
     }, 100);
   };
 
-  const handleUpdateLists = async () => {
-    if (updating) {
-      return;
-    }
-    setUpdating(true);
-    setUpdateMessage(null);
-    setProgress(null);
-    try {
-      const {meta: newMeta, results, totalNames} = await updateSanctionsLists(
-        p => setProgress(p),
-      );
-      setMeta(newMeta);
-      const ok = results.filter(r => r.ok).length;
-      const fail = results.filter(r => !r.ok);
-      if (fail.length) {
-        setUpdateMessage(
-          t('updatePartial', {
-            ok,
-            total: results.length,
-            names: totalNames.toLocaleString(locale),
-            failed: fail.map(f => `${f.label} (${f.error})`).join('; '),
-          }),
-        );
-      } else {
-        setUpdateMessage(
-          t('updateOk', {
-            ok,
-            total: results.length,
-            names: totalNames.toLocaleString(locale),
-          }),
-        );
-      }
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : String(err ?? 'Update failed');
-      setUpdateMessage(t('updateFailed', {error: message}));
-      await refreshMeta();
-    } finally {
-      setUpdating(false);
-    }
+  const handleUpdateLists = () => {
+    void runListUpdate('manual');
   };
 
   const stale = meta ? isListsStale(meta) : false;
@@ -209,7 +268,8 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
       keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
         {header}
-        <Image source={{uri: 'mweli', isStatic: true}} style={styles.logo} />
+        {/* Android drawable: res/drawable/mkweli.webp */}
+        <Image source={{uri: 'mkweli'}} style={styles.logo} />
 
         <View
           style={[

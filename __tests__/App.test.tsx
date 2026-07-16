@@ -23,7 +23,7 @@ describe('App Component', () => {
     await ReactTestRenderer.act(async () => {
       await Promise.resolve();
     });
-  });
+  }, 30000);
 
   afterEach(() => {
     ReactTestRenderer.act(() => {

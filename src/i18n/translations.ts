@@ -30,7 +30,14 @@ const en = {
   bundledSeed: 'Bundled seed data (not yet updated)',
   seedSuffix: ' (seed)',
   staleNotice:
-    'Lists are older than 30 days (or still bundled). Tap Update to download the latest official lists.',
+    'Lists are older than 30 days (or still bundled). The app will download the latest official lists automatically when online.',
+  autoUpdating:
+    'Lists are outdated. Downloading and parsing the latest official lists automatically…',
+  autoUpdateOk:
+    'Automatic update complete: {{ok}}/{{total}} sources · {{names}} total names.',
+  autoUpdatePartial:
+    'Automatic update partial: {{ok}}/{{total}} sources · {{names}} names. Kept previous lists for: {{failed}}',
+  autoUpdateFailed: 'Automatic update failed: {{error}}. You can retry with Update lists.',
   updateLists: 'Update lists',
   placeholderName: 'Enter name to screen',
   screen: 'Screen',
@@ -70,7 +77,7 @@ const en = {
     '1. On the main screen, type the full name in the search field.\n2. Tap Screen.\n3. Read the result:\n   • Red — “Sanctioned: Match found in database.” The name matches an entry on one or more lists.\n   • Green — “Not sanctioned: No match found.” No exact match was found.\n\nTips: Try alternate spellings, order of names, and common aliases if you expect a hit. Matching is exact after trimming spaces; partial names will not match.',
   sectionUpdateTitle: 'Update sanctions lists',
   sectionUpdateBody:
-    'Lists ship with the app as seed data. You should refresh them regularly (about once a month).\n\n1. Ensure the device has internet access.\n2. On the main screen, open the Sanctions lists card.\n3. Tap Update lists.\n4. Wait while each source downloads (UN, EU, UK, USA). Progress shows for each step.\n5. When finished, only names are kept. Temporary download files are deleted. Previous lists for a source are replaced only if that source updates successfully.\n\nIf a source fails (network error, server issue), the app keeps the last good list for that source. You can try Update lists again later.\n\nAn orange notice appears if lists are older than 30 days or still using bundled seed data.',
+    'Lists ship with the app as seed data. Every time you open the app, if lists are older than 30 days (or still seed data), Mkweli automatically downloads and parses the latest official lists when the device is online.\n\nYou can also refresh at any time:\n1. Ensure the device has internet access.\n2. On the main screen, open the Sanctions lists card.\n3. Tap Update lists.\n4. Wait while each source downloads (UN, EU, UK, USA). Progress shows for each step.\n5. When finished, only names are kept. Temporary download files are deleted. Previous lists for a source are replaced only if that source updates successfully.\n\nIf a source fails (network error, server issue), the app keeps the last good list for that source. You can try Update lists again later.\n\nAn orange notice appears if lists are older than 30 days or still using bundled seed data.',
   sectionStatusTitle: 'Understanding list status',
   sectionStatusBody:
     '• Last update — when any successful download last completed.\n• Names loaded — approximate total names across all sources.\n• Source chips (UN / EU / UK / USA) — count of names per list. “(seed)” means the built-in data is still in use for that source. A warning mark means the last update for that source failed.',
@@ -94,7 +101,15 @@ const fr: Record<TranslationKey, string> = {
   bundledSeed: 'Données intégrées (pas encore mises à jour)',
   seedSuffix: ' (intégrée)',
   staleNotice:
-    'Les listes ont plus de 30 jours (ou sont encore intégrées). Appuyez sur Mettre à jour pour télécharger les listes officielles les plus récentes.',
+    'Les listes ont plus de 30 jours (ou sont encore intégrées). L’application téléchargera automatiquement les listes officielles les plus récentes en ligne.',
+  autoUpdating:
+    'Listes obsolètes. Téléchargement et analyse automatiques des listes officielles…',
+  autoUpdateOk:
+    'Mise à jour automatique terminée : {{ok}}/{{total}} sources · {{names}} noms au total.',
+  autoUpdatePartial:
+    'Mise à jour automatique partielle : {{ok}}/{{total}} sources · {{names}} noms. Listes précédentes conservées pour : {{failed}}',
+  autoUpdateFailed:
+    'Échec de la mise à jour automatique : {{error}}. Réessayez avec Mettre à jour les listes.',
   updateLists: 'Mettre à jour les listes',
   placeholderName: 'Saisir un nom à contrôler',
   screen: 'Contrôler',
@@ -135,7 +150,7 @@ const fr: Record<TranslationKey, string> = {
     '1. Sur l’écran principal, saisissez le nom complet dans le champ de recherche.\n2. Appuyez sur Contrôler.\n3. Lisez le résultat :\n   • Rouge — « Sanctionné : correspondance trouvée. » Le nom figure sur une ou plusieurs listes.\n   • Vert — « Non sanctionné : aucune correspondance. » Aucune correspondance exacte.\n\nAstuces : essayez d’autres orthographes, l’ordre des noms et les alias courants. La correspondance est exacte après suppression des espaces ; les noms partiels ne correspondent pas.',
   sectionUpdateTitle: 'Mettre à jour les listes de sanctions',
   sectionUpdateBody:
-    'Des listes de base sont fournies avec l’application. Actualisez-les régulièrement (environ une fois par mois).\n\n1. Vérifiez que l’appareil a accès à Internet.\n2. Sur l’écran principal, ouvrez la carte Listes de sanctions.\n3. Appuyez sur Mettre à jour les listes.\n4. Attendez le téléchargement de chaque source (ONU, UE, RU, USA). La progression s’affiche.\n5. À la fin, seuls les noms sont conservés. Les fichiers temporaires sont supprimés. Les listes précédentes d’une source ne sont remplacées que si la mise à jour de cette source réussit.\n\nSi une source échoue (réseau, serveur), l’application conserve la dernière bonne liste pour cette source. Réessayez plus tard.\n\nUn message orange s’affiche si les listes ont plus de 30 jours ou utilisent encore les données intégrées.',
+    'Des listes de base sont fournies avec l’application. À chaque ouverture, si les listes ont plus de 30 jours (ou sont encore intégrées), Mkweli télécharge et analyse automatiquement les listes officielles lorsque l’appareil est en ligne.\n\nVous pouvez aussi actualiser à tout moment :\n1. Vérifiez que l’appareil a accès à Internet.\n2. Sur l’écran principal, ouvrez la carte Listes de sanctions.\n3. Appuyez sur Mettre à jour les listes.\n4. Attendez le téléchargement de chaque source (ONU, UE, RU, USA). La progression s’affiche.\n5. À la fin, seuls les noms sont conservés. Les fichiers temporaires sont supprimés. Les listes précédentes d’une source ne sont remplacées que si la mise à jour de cette source réussit.\n\nSi une source échoue (réseau, serveur), l’application conserve la dernière bonne liste pour cette source. Réessayez plus tard.\n\nUn message orange s’affiche si les listes ont plus de 30 jours ou utilisent encore les données intégrées.',
   sectionStatusTitle: 'Comprendre l’état des listes',
   sectionStatusBody:
     '• Dernière mise à jour — date du dernier téléchargement réussi.\n• Noms chargés — total approximatif sur toutes les sources.\n• Pastilles de source (ONU / UE / RU / USA) — nombre de noms par liste. « (intégrée) » signifie que les données fournies sont encore utilisées. Un avertissement indique un échec de la dernière mise à jour pour cette source.',
@@ -159,7 +174,15 @@ const pt: Record<TranslationKey, string> = {
   bundledSeed: 'Dados incluídos (ainda não atualizados)',
   seedSuffix: ' (incluída)',
   staleNotice:
-    'As listas têm mais de 30 dias (ou ainda são as incluídas). Toque em Atualizar para descarregar as listas oficiais mais recentes.',
+    'As listas têm mais de 30 dias (ou ainda são as incluídas). A aplicação descarregará automaticamente as listas oficiais mais recentes quando estiver online.',
+  autoUpdating:
+    'Listas desatualizadas. A descarregar e analisar automaticamente as listas oficiais…',
+  autoUpdateOk:
+    'Atualização automática concluída: {{ok}}/{{total}} fontes · {{names}} nomes no total.',
+  autoUpdatePartial:
+    'Atualização automática parcial: {{ok}}/{{total}} fontes · {{names}} nomes. Mantidas as listas anteriores para: {{failed}}',
+  autoUpdateFailed:
+    'Falha na atualização automática: {{error}}. Pode tentar novamente com Atualizar listas.',
   updateLists: 'Atualizar listas',
   placeholderName: 'Introduza o nome a verificar',
   screen: 'Verificar',
@@ -200,7 +223,7 @@ const pt: Record<TranslationKey, string> = {
     '1. No ecrã principal, escreva o nome completo no campo de pesquisa.\n2. Toque em Verificar.\n3. Leia o resultado:\n   • Vermelho — “Sancionado: correspondência encontrada.” O nome consta de uma ou mais listas.\n   • Verde — “Não sancionado: nenhuma correspondência.” Não foi encontrada correspondência exata.\n\nDicas: experimente grafias alternativas, ordem dos nomes e pseudónimos comuns. A correspondência é exata após remover espaços; nomes parciais não correspondem.',
   sectionUpdateTitle: 'Atualizar listas de sanções',
   sectionUpdateBody:
-    'As listas são fornecidas com a aplicação como dados iniciais. Deve atualizá-las regularmente (cerca de uma vez por mês).\n\n1. Certifique-se de que o dispositivo tem Internet.\n2. No ecrã principal, abra o cartão Listas de sanções.\n3. Toque em Atualizar listas.\n4. Aguarde o download de cada fonte (ONU, UE, RU, EUA). O progresso é mostrado.\n5. No fim, apenas os nomes são guardados. Os ficheiros temporários são eliminados. As listas anteriores de uma fonte só são substituídas se a atualização dessa fonte for bem-sucedida.\n\nSe uma fonte falhar (rede, servidor), a aplicação mantém a última lista válida dessa fonte. Pode tentar novamente mais tarde.\n\nUm aviso laranja aparece se as listas tiverem mais de 30 dias ou ainda usarem os dados incluídos.',
+    'As listas são fornecidas com a aplicação como dados iniciais. Sempre que abrir a aplicação, se as listas tiverem mais de 30 dias (ou ainda forem dados incluídos), o Mkweli descarrega e analisa automaticamente as listas oficiais quando o dispositivo está online.\n\nTambém pode atualizar a qualquer momento:\n1. Certifique-se de que o dispositivo tem Internet.\n2. No ecrã principal, abra o cartão Listas de sanções.\n3. Toque em Atualizar listas.\n4. Aguarde o download de cada fonte (ONU, UE, RU, EUA). O progresso é mostrado.\n5. No fim, apenas os nomes são guardados. Os ficheiros temporários são eliminados. As listas anteriores de uma fonte só são substituídas se a atualização dessa fonte for bem-sucedida.\n\nSe uma fonte falhar (rede, servidor), a aplicação mantém a última lista válida dessa fonte. Pode tentar novamente mais tarde.\n\nUm aviso laranja aparece se as listas tiverem mais de 30 dias ou ainda usarem os dados incluídos.',
   sectionStatusTitle: 'Compreender o estado das listas',
   sectionStatusBody:
     '• Última atualização — quando o último download bem-sucedido foi concluído.\n• Nomes carregados — total aproximado em todas as fontes.\n• Etiquetas de fonte (ONU / UE / RU / EUA) — contagem de nomes por lista. “(incluída)” significa que os dados incorporados ainda estão em uso. Um aviso indica falha na última atualização dessa fonte.',
@@ -224,7 +247,15 @@ const es: Record<TranslationKey, string> = {
   bundledSeed: 'Datos incluidos (aún no actualizados)',
   seedSuffix: ' (incluida)',
   staleNotice:
-    'Las listas tienen más de 30 días (o siguen siendo las incluidas). Pulse Actualizar para descargar las listas oficiales más recientes.',
+    'Las listas tienen más de 30 días (o siguen siendo las incluidas). La aplicación descargará automáticamente las listas oficiales más recientes cuando esté en línea.',
+  autoUpdating:
+    'Listas desactualizadas. Descargando y analizando automáticamente las listas oficiales…',
+  autoUpdateOk:
+    'Actualización automática completada: {{ok}}/{{total}} fuentes · {{names}} nombres en total.',
+  autoUpdatePartial:
+    'Actualización automática parcial: {{ok}}/{{total}} fuentes · {{names}} nombres. Se conservaron listas anteriores para: {{failed}}',
+  autoUpdateFailed:
+    'Falló la actualización automática: {{error}}. Puede reintentar con Actualizar listas.',
   updateLists: 'Actualizar listas',
   placeholderName: 'Introduzca el nombre a verificar',
   screen: 'Verificar',
@@ -265,7 +296,7 @@ const es: Record<TranslationKey, string> = {
     '1. En la pantalla principal, escriba el nombre completo en el campo de búsqueda.\n2. Pulse Verificar.\n3. Lea el resultado:\n   • Rojo — “Sancionado: coincidencia encontrada.” El nombre figura en una o más listas.\n   • Verde — “No sancionado: no se encontró coincidencia.” No hubo coincidencia exacta.\n\nConsejos: pruebe ortografías alternativas, el orden de los nombres y alias habituales. La coincidencia es exacta tras quitar espacios; los nombres parciales no coinciden.',
   sectionUpdateTitle: 'Actualizar las listas de sanciones',
   sectionUpdateBody:
-    'Las listas se incluyen con la aplicación como datos iniciales. Debe actualizarlas con regularidad (unas veces al mes).\n\n1. Asegúrese de que el dispositivo tiene Internet.\n2. En la pantalla principal, abra la tarjeta Listas de sanciones.\n3. Pulse Actualizar listas.\n4. Espere a que se descargue cada fuente (ONU, UE, RU, EE. UU.). Se muestra el progreso.\n5. Al terminar, solo se guardan los nombres. Los archivos temporales se eliminan. Las listas anteriores de una fuente solo se reemplazan si la actualización de esa fuente tiene éxito.\n\nSi una fuente falla (red, servidor), la aplicación conserva la última lista válida de esa fuente. Puede reintentarlo más tarde.\n\nAparece un aviso naranja si las listas tienen más de 30 días o aún usan los datos incluidos.',
+    'Las listas se incluyen con la aplicación como datos iniciales. Cada vez que abra la aplicación, si las listas tienen más de 30 días (o siguen siendo datos incluidos), Mkweli descarga y analiza automáticamente las listas oficiales cuando el dispositivo está en línea.\n\nTambién puede actualizar en cualquier momento:\n1. Asegúrese de que el dispositivo tiene Internet.\n2. En la pantalla principal, abra la tarjeta Listas de sanciones.\n3. Pulse Actualizar listas.\n4. Espere a que se descargue cada fuente (ONU, UE, RU, EE. UU.). Se muestra el progreso.\n5. Al terminar, solo se guardan los nombres. Los archivos temporales se eliminan. Las listas anteriores de una fuente solo se reemplazan si la actualización de esa fuente tiene éxito.\n\nSi una fuente falla (red, servidor), la aplicación conserva la última lista válida de esa fuente. Puede reintentarlo más tarde.\n\nAparece un aviso naranja si las listas tienen más de 30 días o aún usan los datos incluidos.',
   sectionStatusTitle: 'Entender el estado de las listas',
   sectionStatusBody:
     '• Última actualización — cuándo se completó la última descarga correcta.\n• Nombres cargados — total aproximado de todas las fuentes.\n• Etiquetas de fuente (ONU / UE / RU / EE. UU.) — cantidad de nombres por lista. “(incluida)” significa que aún se usan los datos integrados. Una advertencia indica que falló la última actualización de esa fuente.',

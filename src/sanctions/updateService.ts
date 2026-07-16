@@ -1,18 +1,21 @@
 /**
- * Download official sanctions XML lists, extract names, replace stored data,
- * and delete temporary XML (and previous name lists) after a successful update.
+ * Download official sanctions lists, extract names, replace stored data,
+ * and delete temporary files (and previous name lists) after a successful update.
  *
- * Large lists (e.g. OFAC SDN_ENHANCED ~100MB) are downloaded to disk and
- * processed in chunks so the whole XML is never held in memory at once.
+ * Downloads use fetch() (full redirect follow — required for OFAC→S3).
+ * Extraction streams UTF-8-safe byte chunks so multi-byte names (EU/UK) never
+ * throw "Invalid byte index" at chunk boundaries.
  */
 
 import RNFS from 'react-native-fs';
 import {
   EXTRACTORS,
-  CSV_EXTRACTORS,
+  createCsvStreamState,
+  extractCsvNamesFromChunk,
+  flushCsvStreamState,
   extractNamesFromChunk,
-  type ExtractorFn,
 } from './extractors';
+import {downloadUrlToFile, safeUnlink, streamFileUtf8} from './fileIo';
 import {
   SANCTIONS_SOURCES,
   type SanctionsSource,
@@ -74,148 +77,117 @@ export interface UpdateProgress {
 export type ProgressCallback = (progress: UpdateProgress) => void;
 
 const DOWNLOAD_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes per list
-const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB read chunks
-/** Lists larger than this use chunked disk processing. */
-const LARGE_FILE_THRESHOLD = 8 * 1024 * 1024;
+/** Text-stream chunk size for CSV/XML parsers (bytes read from disk). */
+const STREAM_CHUNK_BYTES = 256 * 1024;
 
 function tempPath(source: SanctionsSource): string {
   return `${RNFS.CachesDirectoryPath}/${source.tempFileName}`;
 }
 
-async function safeUnlink(path: string): Promise<void> {
-  try {
-    const exists = await RNFS.exists(path);
-    if (exists) {
-      await RNFS.unlink(path);
-    }
-  } catch {
-    // best-effort cleanup
-  }
-}
-
 /**
- * Download XML to a cache file. Returns local path.
- * Always deletes any previous temp file for this source first.
+ * Download a sanctions list to a cache file. Returns local path.
+ * Uses fetch so OFAC (and similar) multi-hop redirects work on all OEMs.
  */
 async function downloadXmlToFile(
   source: SanctionsSource,
   onBytes?: (received: number, total: number) => void,
 ): Promise<string> {
   const path = tempPath(source);
-  await safeUnlink(path);
-
-  const result = await RNFS.downloadFile({
-    fromUrl: source.url,
-    toFile: path,
-    background: false,
-    discretionary: false,
-    cacheable: false,
-    connectionTimeout: 60_000,
-    readTimeout: DOWNLOAD_TIMEOUT_MS,
-    progressDivider: 5,
-    begin: res => {
-      onBytes?.(0, res.contentLength || 0);
-    },
-    progress: res => {
-      onBytes?.(res.bytesWritten, res.contentLength || 0);
-    },
-  }).promise;
-
-  if (result.statusCode < 200 || result.statusCode >= 300) {
-    await safeUnlink(path);
-    throw new Error(`HTTP ${result.statusCode}`);
+  try {
+    await downloadUrlToFile(source.url, path, {
+      timeoutMs: DOWNLOAD_TIMEOUT_MS,
+      onBytes,
+      alternateUrls: source.alternateUrls,
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : String(err ?? 'download failed');
+    // Keep message readable in the UI (trim huge multi-transport dump)
+    const short =
+      message.length > 280 ? `${message.slice(0, 280)}…` : message;
+    throw new Error(`Download failed for ${source.label}: ${short}`);
   }
-
-  const stat = await RNFS.stat(path);
-  if (!stat.size || Number(stat.size) < 100) {
-    await safeUnlink(path);
-    throw new Error('Downloaded file is empty or too small');
-  }
-
   return path;
 }
 
 /**
- * Extract names from a local file (CSV or XML), using chunked reads for large XML files.
- * CSV files are typically small enough to read in full.
+ * Extract names from a local file (CSV or XML) with UTF-8-safe streaming.
  */
 async function extractNamesFromFile(
   source: SanctionsSource,
   path: string,
 ): Promise<string[]> {
-  const stat = await RNFS.stat(path);
-  const size = Number(stat.size);
   const isCSV = source.tempFileName.toLowerCase().endsWith('.csv');
 
-  if (size <= LARGE_FILE_THRESHOLD) {
-    const content = await RNFS.readFile(path, 'utf8');
-
-    // Detect format and get appropriate extractor
-    let extractor: ExtractorFn | undefined;
-    let formatName = '';
-
-    if (isCSV) {
-      extractor = CSV_EXTRACTORS[source.id];
-      formatName = 'CSV';
-    } else {
-      extractor = EXTRACTORS[source.id];
-      formatName = 'XML';
-    }
-
-    if (!extractor) {
-      throw new Error(`No ${formatName} extractor for source ${source.id}`);
-    }
-
-    const names = extractor(content);
-    if (names.length === 0) {
-      throw new Error(
-        `No names extracted from ${formatName} (parse failed or empty list)`,
-      );
-    }
-    return names;
-  }
-
-  // Large file — use chunked processing (XML only; CSV is always small)
+  // ── CSV: stateful line stream (UTF-8 safe chunks) ────────────────────────
   if (isCSV) {
-    throw new Error('CSV file unexpectedly large (> 8MB)');
-  }
+    const all = new Set<string>();
+    let state = createCsvStreamState();
 
-  const all = new Set<string>();
-  let offset = 0;
-  let carry = '';
-
-  while (offset < size) {
-    const length = Math.min(CHUNK_SIZE, size - offset);
-    const chunk = await RNFS.read(path, length, offset, 'utf8');
-    const {names, carry: nextCarry} = extractNamesFromChunk(
-      source.id,
-      chunk,
-      carry,
+    await streamFileUtf8(
+      path,
+      text => {
+        const result = extractCsvNamesFromChunk(
+          source.id as 'eu' | 'uk' | 'usa',
+          text,
+          state,
+        );
+        for (const n of result.names) {
+          all.add(n);
+        }
+        state = result.state;
+      },
+      STREAM_CHUNK_BYTES,
     );
-    for (const n of names) {
+
+    for (const n of flushCsvStreamState(
+      source.id as 'eu' | 'uk' | 'usa',
+      state,
+    )) {
       all.add(n);
     }
-    carry = nextCarry;
-    offset += length;
+
+    if (all.size === 0) {
+      throw new Error('No names extracted from CSV (parse failed or empty list)');
+    }
+    return Array.from(all);
   }
 
+  // ── XML: chunked regex extraction (UTF-8 safe chunks) ────────────────────
+  const all = new Set<string>();
+  let carry = '';
+
+  await streamFileUtf8(
+    path,
+    text => {
+      const {names, carry: nextCarry} = extractNamesFromChunk(
+        source.id,
+        text,
+        carry,
+      );
+      for (const n of names) {
+        all.add(n);
+      }
+      carry = nextCarry;
+    },
+    STREAM_CHUNK_BYTES,
+  );
+
   if (carry.length) {
-    const {names} = extractNamesFromChunk(source.id, '', carry);
+    const {names: tailNames} = extractNamesFromChunk(source.id, '', carry);
     const extractor = EXTRACTORS[source.id];
     if (extractor) {
       for (const n of extractor(carry)) {
         all.add(n);
       }
     }
-    for (const n of names) {
+    for (const n of tailNames) {
       all.add(n);
     }
   }
 
   if (all.size === 0) {
-    throw new Error(
-      'No names extracted from large XML (parse failed or empty list)',
-    );
+    throw new Error('No names extracted from XML (parse failed or empty list)');
   }
   return Array.from(all);
 }

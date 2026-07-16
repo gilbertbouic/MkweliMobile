@@ -1,97 +1,98 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# MkweliMobile
 
-# Getting Started
+Mobile sanctions screening app built with React Native.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Release
 
-## Step 1: Start Metro
+- Release version: `v1.0.8`
+- Android `versionName`: `1.0.8`
+- Android `versionCode`: `8`
+- iOS `MARKETING_VERSION`: `1.0.8`
+- iOS `CURRENT_PROJECT_VERSION`: `8`
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## What This App Does
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- Screens names against sanctions data bundled in `assets/sanctions/` and `src/sanctions/`.
+- Supports multilingual UI strings through `src/i18n/`.
+- Runs on Android and iOS with React Native `0.83.1`.
+- Routes startup safely for Google and non-Google device profiles in Android native initialization.
 
-```sh
-# Using npm
-npm start
+## Prerequisites
 
-# OR using Yarn
-yarn start
+- Node.js `>=20`
+- npm
+- Android Studio + Android SDK (for Android builds)
+- Xcode + CocoaPods (for iOS builds)
+
+## Install
+
+```bash
+cd /home/gil/MkweliMobile
+npm install
 ```
 
-## Step 2: Build and run your app
+For iOS dependencies:
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
+```bash
+cd /home/gil/MkweliMobile/ios
 bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
 bundle exec pod install
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## Run In Development
 
-```sh
-# Using npm
-npm run ios
+Start Metro:
 
-# OR using Yarn
-yarn ios
+```bash
+cd /home/gil/MkweliMobile
+npm start
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+Run Android (new terminal):
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+```bash
+cd /home/gil/MkweliMobile
+npm run android
+```
 
-## Step 3: Modify your app
+Run iOS (macOS only, new terminal):
 
-Now that you have successfully run the app, let's make changes!
+```bash
+cd /home/gil/MkweliMobile
+npm run ios
+```
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+## Build
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+Android debug/release helper scripts are available at project root, including:
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+- `build-apk.sh`
+- `build-apk-quick.sh`
+- `build-apk-gradle9.sh`
+- `final-integration-build.sh`
 
-## Congratulations! :tada:
+Primary Android Gradle module path: `android/app/`.
 
-You've successfully run and modified your React Native App. :partying_face:
+## Test
 
-### Now what?
+Run the Jest test suite:
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+```bash
+cd /home/gil/MkweliMobile
+npm test
+```
 
-# Troubleshooting
+## Project Structure
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+- `App.tsx`: main app UI and flow
+- `src/sanctions/`: sanctions domain logic
+- `src/i18n/`: localization resources
+- `android/`: Android native project
+- `ios/`: iOS native project
+- `__tests__/`: automated tests
+- `assets/sanctions/`: bundled sanctions source files
 
-# Learn More
+## Notes
 
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- For Android release signing, use keystore properties expected by `android/app/build.gradle`.
+- Build and verification guides are documented in the root markdown files (for example `BUILD-AND-RUN-GUIDE.md`, `APK-BUILD-GUIDE.md`, and `TESTING-GUIDE.md`).

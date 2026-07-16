@@ -3,6 +3,7 @@
  * Real-world AML screening scenarios and edge cases
  */
 
+declare const performance: any;
 import { isSanctioned, allSanctionedNames } from '../sanctions-data';
 
 describe('Real-World AML Screening Scenarios', () => {

@@ -3,6 +3,7 @@
  * Test utilities and helpers for the sanctions screening app
  */
 
+declare const performance: any;
 import { isSanctioned, allSanctionedNames } from '../sanctions-data';
 
 /**
@@ -263,10 +264,10 @@ export class TestUtils {
    */
   static generateTestReport(): {
     timestamp: string;
-    databaseStats: ReturnType<typeof this.getDatabaseStats>;
-    performanceMetrics: ReturnType<typeof this.measurePerformance>;
-    sampleResults: ReturnType<typeof this.testNameBatch>;
-    stressTestResults: ReturnType<typeof this.stressTest>;
+    databaseStats: ReturnType<typeof TestUtils.getDatabaseStats>;
+    performanceMetrics: ReturnType<typeof TestUtils.measurePerformance>;
+    sampleResults: ReturnType<typeof TestUtils.testNameBatch>;
+    stressTestResults: ReturnType<typeof TestUtils.stressTest>;
   } {
     return {
       timestamp: new Date().toISOString(),

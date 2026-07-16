@@ -2,6 +2,7 @@
  * @format
  */
 
+declare const performance: any;
 import { isSanctioned, allSanctionedNames } from '../sanctions-data';
 
 describe('Sanctions Data Module', () => {

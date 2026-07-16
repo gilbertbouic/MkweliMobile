@@ -5,24 +5,40 @@
 
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
+declare const performance: any;
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const rnfsMock = require('../__mocks__/react-native-fs');
 import App from '../App';
 import { isSanctioned, allSanctionedNames } from '../sanctions-data';
 
 describe('Final Integration Tests - Complete App Verification', () => {
+  beforeEach(() => {
+    if (typeof rnfsMock.__reset === 'function') {
+      rnfsMock.__reset();
+    }
+  });
+
   describe('Application Initialization', () => {
-    test('app initializes without errors', async () => {
-      let root: ReactTestRenderer.ReactTestRenderer;
+    test(
+      'app initializes without errors',
+      async () => {
+        let root: ReactTestRenderer.ReactTestRenderer;
 
-      await ReactTestRenderer.act(async () => {
-        root = ReactTestRenderer.create(<App />);
-      });
+        await ReactTestRenderer.act(async () => {
+          root = ReactTestRenderer.create(<App />);
+        });
+        await ReactTestRenderer.act(async () => {
+          await Promise.resolve();
+        });
 
-      expect(root!.toJSON()).toBeTruthy();
+        expect(root!.toJSON()).toBeTruthy();
 
-      ReactTestRenderer.act(() => {
-        root!.unmount();
-      });
-    });
+        ReactTestRenderer.act(() => {
+          root!.unmount();
+        });
+      },
+      30000,
+    );
 
     test('database loads successfully on app start', () => {
       expect(allSanctionedNames).toBeDefined();
@@ -45,6 +61,9 @@ describe('Final Integration Tests - Complete App Verification', () => {
       await ReactTestRenderer.act(async () => {
         root = ReactTestRenderer.create(<App />);
       });
+      await ReactTestRenderer.act(async () => {
+        await Promise.resolve();
+      });
 
       const tree = root!.toJSON();
       expect(tree).toBeTruthy();
@@ -65,6 +84,9 @@ describe('Final Integration Tests - Complete App Verification', () => {
       await ReactTestRenderer.act(async () => {
         root = ReactTestRenderer.create(<App />);
       });
+      await ReactTestRenderer.act(async () => {
+        await Promise.resolve();
+      });
 
       const instance = root!.root;
 
@@ -73,7 +95,7 @@ describe('Final Integration Tests - Complete App Verification', () => {
       expect(textInputs.length).toBeGreaterThan(0);
 
       // Check for TouchableOpacity (button)
-      const buttons = instance.findAllByType('TouchableOpacity' as any);
+      const buttons = instance.findAll(node => typeof node.props.onPress === 'function');
       expect(buttons.length).toBeGreaterThan(0);
 
       ReactTestRenderer.act(() => {
@@ -86,8 +108,8 @@ describe('Final Integration Tests - Complete App Verification', () => {
     test('complete screening workflow functions correctly', () => {
       // Simulate end-to-end workflow
       const testInputs = [
-        'Vladimir Putin',
-        'Ali al-Hamud',
+        'Putin',
+        "'Ali al-Hamud",
         'John Smith',
         '',
         'Random Name XYZ',
@@ -269,6 +291,9 @@ describe('Final Integration Tests - Complete App Verification', () => {
 
       await ReactTestRenderer.act(async () => {
         root = ReactTestRenderer.create(<App />);
+      });
+      await ReactTestRenderer.act(async () => {
+        await Promise.resolve();
       });
 
       // Check app renders

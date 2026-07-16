@@ -10,6 +10,9 @@ import {
   extractEuCsvNames,
   extractUkCsvNames,
   extractUsaCsvNames,
+  createCsvStreamState,
+  extractCsvNamesFromChunk,
+  flushCsvStreamState,
 } from '../src/sanctions/extractors';
 
 describe('Sanctions XML extractors', () => {
@@ -153,10 +156,21 @@ describe('Sanctions XML extractors', () => {
 });
 
 describe('Sanctions CSV extractors', () => {
-  test('extractEuCsvNames parses EU sanctions CSV', () => {
+  test('extractEuCsvNames parses simple EU CSV', () => {
     const csv = `name,type,designation_date
 Saddam Hussein Al-Tikriti,individual,2001-01-01
 Abu Ali,individual,2001-02-01`;
+    const names = extractEuCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining(['Saddam Hussein Al-Tikriti', 'Abu Ali']),
+    );
+  });
+
+  test('extractEuCsvNames parses live FSD semicolon CSV with Naal_wholename', () => {
+    const csv =
+      '\ufeffDate_file;Entity_logical_id;Naal_wholename;Programme\n' +
+      '05/06/2026;13;Saddam Hussein Al-Tikriti;IRQ\n' +
+      '05/06/2026;13;Abu Ali;IRQ\n';
     const names = extractEuCsvNames(csv);
     expect(names).toEqual(
       expect.arrayContaining(['Saddam Hussein Al-Tikriti', 'Abu Ali']),
@@ -173,7 +187,7 @@ Abu Ali,individual,2001-02-01`;
     );
   });
 
-  test('extractUkCsvNames parses UK sanctions CSV', () => {
+  test('extractUkCsvNames parses simple UK CSV', () => {
     const csv = `name,type,designation_date
 Vladimir Vladimirovich PUTIN,individual,2022-02-01
 Rosneft PAO,entity,2022-02-15`;
@@ -183,11 +197,100 @@ Rosneft PAO,entity,2022-02-15`;
     );
   });
 
-  test('extractUsaCsvNames parses OFAC SDN CSV', () => {
+  test('extractUkCsvNames joins Name 1-6 and skips Report Date preamble', () => {
+    const csv = `Report Date: 15-Jul-2026
+Last Updated,Unique ID,Name 6,Name 1,Name 2,Name 3,Name 4,Name 5,Name type
+16/04/2026,AFG0001,HAJI KHAIRULLAH HAJI SATTAR MONEY EXCHANGE,,,,,,Primary Name
+01/01/2022,RUS0001,PUTIN,Vladimir,Vladimirovich,,,,Primary Name`;
+    const names = extractUkCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'HAJI KHAIRULLAH HAJI SATTAR MONEY EXCHANGE',
+        'Vladimir Vladimirovich PUTIN',
+      ]),
+    );
+  });
+
+  test('extractUsaCsvNames parses headered OFAC-style CSV', () => {
     const csv = `name,type,entity_number,designations
 "PUTIN, Vladimir Vladimirovich",individual,12345,"CEO Russia"
 ROSNEFT PAO,entity,67890,"Russian Energy"`;
     const names = extractUsaCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'PUTIN, Vladimir Vladimirovich',
+        'Vladimir Vladimirovich PUTIN',
+        'ROSNEFT PAO',
+      ]),
+    );
+  });
+
+  test('extractUsaCsvNames parses live SDN.CSV with no header row', () => {
+    const csv = `36,"AEROCARIBBEAN AIRLINES",-0- ,"CUBA",-0-
+173,"ANGLO-CARIBBEAN CO., LTD.",-0- ,"CUBA",-0-
+306,"BANCO NACIONAL DE CUBA",-0- ,"CUBA",-0-`;
+    const names = extractUsaCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'AEROCARIBBEAN AIRLINES',
+        'ANGLO-CARIBBEAN CO., LTD.',
+        'BANCO NACIONAL DE CUBA',
+      ]),
+    );
+  });
+
+  test('extractUsaCsvNames parses OpenSanctions names.txt (one name per line)', () => {
+    const csv = `AEROCARIBBEAN AIRLINES
+BANCO NACIONAL DE CUBA
+PUTIN, Vladimir Vladimirovich`;
+    const names = extractUsaCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'AEROCARIBBEAN AIRLINES',
+        'BANCO NACIONAL DE CUBA',
+        'PUTIN, Vladimir Vladimirovich',
+        'Vladimir Vladimirovich PUTIN',
+      ]),
+    );
+  });
+
+  test('extractUsaCsvNames parses OpenSanctions simple CSV with aliases', () => {
+    const csv = `"id","schema","name","aliases","dataset"
+"1","Person","Michael Kuajien","Michael Kuajian;Michael Kuajien Duer Mayok","US OFAC SDN"
+"2","Organization","AEROCARIBBEAN AIRLINES","","US OFAC SDN"`;
+    const names = extractUsaCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'Michael Kuajien',
+        'Michael Kuajian',
+        'Michael Kuajien Duer Mayok',
+        'AEROCARIBBEAN AIRLINES',
+      ]),
+    );
+  });
+
+  test('extractUsaCsvNames handles BOM-prefixed headers', () => {
+    const csv = `\ufeffname,type,entity_number
+"PUTIN, Vladimir Vladimirovich",individual,12345`;
+    const names = extractUsaCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'PUTIN, Vladimir Vladimirovich',
+        'Vladimir Vladimirovich PUTIN',
+      ]),
+    );
+  });
+
+  test('chunked CSV streaming preserves names across chunk boundaries', () => {
+    const state = createCsvStreamState();
+    const part1 = '\ufeffname,type\n"PUTIN, Vladimir';
+    const part2 = ' Vladimirovich",individual\nROSNEFT PAO,entity';
+
+    const first = extractCsvNamesFromChunk('usa', part1, state);
+    const second = extractCsvNamesFromChunk('usa', part2, first.state);
+    const flushed = flushCsvStreamState('usa', second.state);
+
+    const names = [...first.names, ...second.names, ...flushed];
     expect(names).toEqual(
       expect.arrayContaining([
         'PUTIN, Vladimir Vladimirovich',

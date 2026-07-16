@@ -86,6 +86,79 @@ async function writeJsonFile(path: string, data: unknown): Promise<void> {
   await RNFS.moveFile(tmp, path);
 }
 
+/**
+ * Write a string array to a file in NDJSON format (one JSON-encoded value per
+ * line) using appendFile in batches of WRITE_BATCH_SIZE.  This avoids
+ * serialising the entire array into one giant string, keeping peak heap usage
+ * proportional to one batch rather than the whole list.
+ */
+const WRITE_BATCH_SIZE = 500;
+
+async function writeNdjsonFile(path: string, items: string[]): Promise<void> {
+  await ensureDataDir();
+  const tmp = `${path}.tmp`;
+
+  // Clean up any stale temp file from a previous failed run
+  try {
+    if (await RNFS.exists(tmp)) {
+      await RNFS.unlink(tmp);
+    }
+  } catch {
+    /* ignore */
+  }
+
+  if (items.length === 0) {
+    await RNFS.writeFile(tmp, '', 'utf8');
+  } else {
+    for (let i = 0; i < items.length; i += WRITE_BATCH_SIZE) {
+      const batch = items.slice(i, i + WRITE_BATCH_SIZE);
+      // Each batch is a block of lines; trailing newline separates batches
+      const chunk = batch.map(n => JSON.stringify(n)).join('\n') + '\n';
+      if (i === 0) {
+        await RNFS.writeFile(tmp, chunk, 'utf8');
+      } else {
+        await RNFS.appendFile(tmp, chunk, 'utf8');
+      }
+    }
+  }
+
+  // Atomic swap
+  try {
+    if (await RNFS.exists(path)) {
+      await RNFS.unlink(path);
+    }
+  } catch {
+    /* ignore */
+  }
+  await RNFS.moveFile(tmp, path);
+}
+
+/**
+ * Read a names file that may be in either:
+ *   • Legacy format: a JSON array  [  "name1", "name2", … ]
+ *   • Current format: NDJSON       "name1"\n"name2"\n…
+ */
+async function readNamesFile(path: string): Promise<string[] | null> {
+  try {
+    const exists = await RNFS.exists(path);
+    if (!exists) return null;
+    const raw = await RNFS.readFile(path, 'utf8');
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    if (trimmed.startsWith('[')) {
+      // Legacy JSON array format written by older builds
+      return JSON.parse(trimmed) as string[];
+    }
+    // NDJSON: one JSON-encoded string per line
+    return trimmed
+      .split('\n')
+      .filter(l => l.trim())
+      .map(l => JSON.parse(l) as string);
+  } catch {
+    return null;
+  }
+}
+
 export async function loadMeta(): Promise<SanctionsMeta> {
   const parsed = await readJsonFile<SanctionsMeta>(META_PATH);
   if (!parsed) {
@@ -104,11 +177,12 @@ export async function saveMeta(meta: SanctionsMeta): Promise<void> {
 
 /**
  * Load names for one source: downloaded copy if present, else bundled seed.
+ * Handles both legacy JSON-array format and current NDJSON format.
  */
 export async function loadSourceNames(
   id: SanctionsSourceId,
 ): Promise<string[]> {
-  const arr = await readJsonFile<string[]>(namesPath(id));
+  const arr = await readNamesFile(namesPath(id));
   if (Array.isArray(arr) && arr.length > 0) {
     return arr;
   }
@@ -116,7 +190,9 @@ export async function loadSourceNames(
 }
 
 /**
- * Atomically replace stored names for a source.
+ * Atomically replace stored names for a source using batched NDJSON writes.
+ * Names are written in batches of 500 via appendFile so the device heap never
+ * needs to hold the full serialised list as a single string.
  * Previous downloaded names file is deleted before the new file is written.
  */
 export async function replaceSourceNames(
@@ -124,7 +200,6 @@ export async function replaceSourceNames(
   names: string[],
 ): Promise<void> {
   const path = namesPath(id);
-  await ensureDataDir();
   // Delete old list first (requirement: old lists deleted after update)
   try {
     if (await RNFS.exists(path)) {
@@ -133,7 +208,7 @@ export async function replaceSourceNames(
   } catch {
     // continue
   }
-  await writeJsonFile(path, names);
+  await writeNdjsonFile(path, names);
 }
 
 /** Remove downloaded names for a source (reverts to bundled seed on next load). */
