@@ -268,8 +268,14 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
       keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
         {header}
-        {/* Android drawable: res/drawable/mkweli.webp */}
-        <Image source={{uri: 'mkweli'}} style={styles.logo} />
+        {/* Density PNGs: drawable-*/mkweli_light.png & mkweli_dark.png */}
+        <Image
+          source={{uri: isDarkMode ? 'mkweli_dark' : 'mkweli_light'}}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityRole="image"
+          accessibilityLabel={t('appTitle')}
+        />
 
         <View
           style={[
@@ -438,11 +444,10 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   logo: {
-    width: 220,
-    height: 88,
+    width: 280,
+    height: 112,
     alignSelf: 'center',
-    marginVertical: 12,
-    resizeMode: 'contain',
+    marginVertical: 16,
   },
   statusCard: {
     marginHorizontal: 12,
