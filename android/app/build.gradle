@@ -34,8 +34,8 @@ android {
         applicationId "com.mkwelimobile"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 8
-        versionName "1.0.8"
+        versionCode 9
+        versionName "1.0.9"
 
         // Real-device ABIs only (universal APK covers both)
         ndk {
