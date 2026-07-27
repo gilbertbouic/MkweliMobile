@@ -268,7 +268,7 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
       keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
         {header}
-        {/* Density PNGs: drawable-*/mkweli_light.png & mkweli_dark.png */}
+        {/* Sharp density PNGs: mkweli_light / mkweli_dark for theme */}
         <Image
           source={{uri: isDarkMode ? 'mkweli_dark' : 'mkweli_light'}}
           style={styles.logo}
