@@ -438,8 +438,8 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 220,
+    height: 88,
     alignSelf: 'center',
     marginVertical: 12,
     resizeMode: 'contain',
