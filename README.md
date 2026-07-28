@@ -5,15 +5,15 @@ Distributed via **GitHub** as a signed APK — **not** on the Google Play Store.
 
 | | |
 |---|---|
-| **Version** | **1.0.8** (`versionCode` 8) |
+| **Version** | **1.0.12** (`versionCode` 12) |
 | **Package** | `com.mkwelimobile` |
-| **Download APK** | **[GitHub Releases · v1.0.8](https://github.com/gilbertbouic/MkweliMobile/releases/tag/v1.0.8)** |
+| **Download APK** | **[Mkweli_v1.0.12.apk](https://github.com/gilbertbouic/MkweliMobile/raw/main/android/app/Mkweli_v1.0.12.apk)** (also under Releases when published) |
 | **Stack** | React Native 0.83 · Hermes · minSdk 24 |
 
 ## Features
 
 - Screen a person or organisation name against **UN**, **EU**, **UK**, and **USA (OFAC SDN)** lists
-- **Exact** match only (case-insensitive, trimmed)
+- **Token matching** (name parts, any order) with ranked strong/possible scores; surname-only and partial queries supported
 - **Auto-update every 30 days** on open when lists are stale or still seed data (manual **Update lists** anytime)
 - Offline screening after the first successful download (or using bundled seed names)
 - UI languages: **EN / FR / PT / ES**
@@ -30,7 +30,7 @@ Distributed via **GitHub** as a signed APK — **not** on the Google Play Store.
 
 ## Install the APK (end users)
 
-1. Download **[Mkweli_v1.0.8.apk](https://github.com/gilbertbouic/MkweliMobile/raw/main/android/app/Mkweli_v1.0.8.apk)** from this repository (Git LFS).
+1. Download **[Mkweli_v1.0.12.apk](https://github.com/gilbertbouic/MkweliMobile/raw/main/android/app/Mkweli_v1.0.12.apk)** from this repository (Git LFS when published).
 2. On Android, allow install from the browser/file manager if prompted.
 3. Open the app on Wi‑Fi for the first automatic list update (USA can take a minute if using the CDN fallback).
 
@@ -75,7 +75,7 @@ Signing is configured via `android/gradle.properties` (`MYAPP_UPLOAD_*`) and the
 cd android
 ./gradlew :app:assembleRelease
 # Output: android/app/build/outputs/apk/release/app-release.apk
-cp app/build/outputs/apk/release/app-release.apk app/Mkweli_v1.0.8.apk
+cp app/build/outputs/apk/release/app-release.apk app/Mkweli_v1.0.12.apk
 ```
 
 `postinstall` applies `scripts/patch-rnfs-promise.js` so `react-native-fs` works with RN 0.83 (null error codes + multi-hop redirects).
