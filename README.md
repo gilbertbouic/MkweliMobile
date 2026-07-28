@@ -7,12 +7,15 @@ Distributed via **GitHub** as a signed APK — **not** on the Google Play Store.
 |---|---|
 | **Version** | **1.0.12** (`versionCode` 12) |
 | **Package** | `com.mkwelimobile` |
-| **Download APK** | **[Mkweli_v1.0.12.apk](https://github.com/gilbertbouic/MkweliMobile/raw/main/android/app/Mkweli_v1.0.12.apk)** (also under Releases when published) |
+| **Product site** | **[aml.mkweli.tech](https://aml.mkweli.tech/)** |
+| **Download APK** | **[Mkweli_v1.0.12.apk](https://aml.mkweli.tech/Mkweli_v1.0.12.apk)** (official host only) |
+| **SHA-256** | `c3ca9da655a5ce2bf219b89f1396042278b87d014fb3ca789547b411d8243228` |
+| **Support** | [support@mkweli.tech](mailto:support@mkweli.tech) |
 | **Stack** | React Native 0.83 · Hermes · minSdk 24 |
 
 ## Features
 
-- Screen a person or organisation name against **UN**, **EU**, **UK**, and **USA (OFAC SDN)** lists
+- Screen a person or organisation name against **UN**, **EU**, **UK (FCDO)**, and **USA (OFAC SDN)** lists
 - **Token matching** (name parts, any order) with ranked strong/possible scores; surname-only and partial queries supported
 - **Auto-update every 30 days** on open when lists are stale or still seed data (manual **Update lists** anytime)
 - Offline screening after the first successful download (or using bundled seed names)
@@ -26,15 +29,16 @@ Distributed via **GitHub** as a signed APK — **not** on the Google Play Store.
 | USA (OFAC SDN) | CSV | Official Treasury/OFAC URLs first; **OpenSanctions CDN** fallback when OFAC hosts are blocked |
 | UN | XML | UN Security Council consolidated list |
 | EU | CSV (`;`) | EU FSD full list (`Naal_wholename`) |
-| UK | CSV | OFSI list (`Name 1`…`Name 6`) |
+| UK (FCDO) | CSV | UK Sanctions List from `sanctionslist.fcdo.gov.uk` |
 
 ## Install the APK (end users)
 
-1. Download **[Mkweli_v1.0.12.apk](https://github.com/gilbertbouic/MkweliMobile/raw/main/android/app/Mkweli_v1.0.12.apk)** from this repository (Git LFS when published).
-2. On Android, allow install from the browser/file manager if prompted.
-3. Open the app on Wi‑Fi for the first automatic list update (USA can take a minute if using the CDN fallback).
+1. Download **[Mkweli_v1.0.12.apk](https://aml.mkweli.tech/Mkweli_v1.0.12.apk)** from the official product site.
+2. Optionally verify the SHA-256 above matches the file you downloaded.
+3. On Android, allow install from the browser/file manager if prompted.
+4. Open the app on Wi‑Fi so lists can auto-update (USA can take a minute if using the CDN fallback).
 
-ABIs included: **armeabi-v7a** + **arm64-v8a** (typical phones).
+ABIs included: **armeabi-v7a** + **arm64-v8a** (typical phones). Not on the Google Play Store.
 
 ## Develop
 
