@@ -26,9 +26,10 @@ import {
   getSanctionsMeta,
   initSanctionsData,
   isListsStale,
-  isSanctioned,
+  screenName,
   updateSanctionsLists,
   type SanctionsMeta,
+  type ScreenResult,
   type UpdateProgress,
 } from './sanctions-data';
 import {InstructionsScreen} from './InstructionsScreen';
@@ -65,7 +66,7 @@ function AppShell() {
 function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
   const {t, locale} = useLanguage();
   const [query, setQuery] = useState('');
-  const [result, setResult] = useState<null | boolean>(null);
+  const [result, setResult] = useState<ScreenResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [booting, setBooting] = useState(true);
   const [meta, setMeta] = useState<SanctionsMeta | null>(null);
@@ -213,10 +214,12 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
 
   const handleSearch = () => {
     setLoading(true);
+    setResult(null);
+    // Defer so the spinner paints; token search is sync on the JS thread.
     setTimeout(() => {
-      setResult(isSanctioned(query));
+      setResult(screenName(query));
       setLoading(false);
-    }, 100);
+    }, 50);
   };
 
   const handleUpdateLists = () => {
@@ -380,9 +383,88 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
           />
         ) : result !== null ? (
           <View style={styles.resultContainer}>
-            <Text style={result ? styles.sanctioned : styles.notSanctioned}>
-              {result ? t('resultSanctioned') : t('resultClear')}
+            <Text
+              style={
+                result.status === 'strong'
+                  ? styles.sanctioned
+                  : result.status === 'possible'
+                    ? styles.possibleMatch
+                    : result.status === 'clear'
+                      ? styles.notSanctioned
+                      : isDarkMode
+                        ? styles.darkEmptyText
+                        : styles.lightEmptyText
+              }>
+              {result.status === 'strong'
+                ? t('resultStrong', {count: result.strongCount})
+                : result.status === 'possible'
+                  ? t('resultPossible', {count: result.possibleCount})
+                  : result.status === 'short_query'
+                    ? t('resultShortQuery')
+                    : result.status === 'empty_query'
+                      ? t('resultEmptyQuery')
+                      : t('resultClear')}
             </Text>
+            {result.queryTokens.length > 0 ? (
+              <Text
+                style={
+                  isDarkMode ? styles.tokensHintDark : styles.tokensHintLight
+                }>
+                {t('tokensUsed', {tokens: result.queryTokens.join(' · ')})}
+              </Text>
+            ) : null}
+            {result.matches.length > 0 ? (
+              <View style={styles.matchList}>
+                {result.matches.map((m, i) => (
+                  <View
+                    key={`${m.name}-${i}`}
+                    style={[
+                      styles.matchRow,
+                      isDarkMode ? styles.matchRowDark : styles.matchRowLight,
+                      m.strength === 'strong'
+                        ? styles.matchRowStrong
+                        : styles.matchRowPossible,
+                    ]}>
+                    <View style={styles.matchHeader}>
+                      <Text
+                        style={
+                          m.strength === 'strong'
+                            ? styles.matchBadgeStrong
+                            : styles.matchBadgePossible
+                        }>
+                        {m.strength === 'strong'
+                          ? t('badgeStrong')
+                          : t('badgePossible')}
+                      </Text>
+                      <Text
+                        style={
+                          isDarkMode
+                            ? styles.matchScoreDark
+                            : styles.matchScoreLight
+                        }>
+                        {t('matchScore', {score: m.score})}
+                      </Text>
+                    </View>
+                    <Text
+                      style={
+                        isDarkMode
+                          ? styles.matchNameDark
+                          : styles.matchNameLight
+                      }>
+                      {m.name}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+            {result.status === 'strong' || result.status === 'possible' ? (
+              <Text
+                style={
+                  isDarkMode ? styles.reviewHintDark : styles.reviewHintLight
+                }>
+                {t('resultReviewHint')}
+              </Text>
+            ) : null}
           </View>
         ) : (
           <View style={styles.resultContainer}>
@@ -582,14 +664,21 @@ const styles = StyleSheet.create({
     marginTop: 50,
   },
   resultContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 30,
-    paddingHorizontal: 20,
+    justifyContent: 'flex-start',
+    alignItems: 'stretch',
+    marginTop: 20,
+    paddingHorizontal: 16,
+    width: '100%',
   },
   sanctioned: {
     fontSize: 18,
     color: '#B71C1C',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  possibleMatch: {
+    fontSize: 18,
+    color: '#E65100',
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -607,6 +696,95 @@ const styles = StyleSheet.create({
   darkEmptyText: {
     fontSize: 16,
     color: '#999',
+    textAlign: 'center',
+  },
+  tokensHintLight: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  tokensHintDark: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+  },
+  matchList: {
+    marginTop: 16,
+    gap: 8,
+  },
+  matchRow: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 12,
+  },
+  matchRowLight: {
+    backgroundColor: '#FFF',
+    borderColor: '#DDD',
+  },
+  matchRowDark: {
+    backgroundColor: '#1E1E1E',
+    borderColor: '#444',
+  },
+  matchRowStrong: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#B71C1C',
+  },
+  matchRowPossible: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#E65100',
+  },
+  matchHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  matchBadgeStrong: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#B71C1C',
+    textTransform: 'uppercase',
+  },
+  matchBadgePossible: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#E65100',
+    textTransform: 'uppercase',
+  },
+  matchScoreLight: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#333',
+  },
+  matchScoreDark: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#EEE',
+  },
+  matchNameLight: {
+    fontSize: 15,
+    color: '#222',
+    fontWeight: '500',
+  },
+  matchNameDark: {
+    fontSize: 15,
+    color: '#F2F2F0',
+    fontWeight: '500',
+  },
+  reviewHintLight: {
+    marginTop: 14,
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#555',
+    textAlign: 'center',
+  },
+  reviewHintDark: {
+    marginTop: 14,
+    fontSize: 12,
+    lineHeight: 18,
+    color: '#AAA',
     textAlign: 'center',
   },
 });

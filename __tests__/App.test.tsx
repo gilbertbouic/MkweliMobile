@@ -47,8 +47,11 @@ describe('App Component', () => {
 
     test('renders initial instructions', () => {
       const tree = root.toJSON();
-      const instructionsText = JSON.stringify(tree).includes('Enter a name and tap Screen');
-      expect(instructionsText).toBe(true);
+      const text = JSON.stringify(tree);
+      expect(
+        text.includes('Enter a person or organisation name') ||
+          text.includes('Enter a name and tap Screen'),
+      ).toBe(true);
     });
 
     test('renders How to use link on main screen', () => {
@@ -212,7 +215,10 @@ describe('App Screening Workflow Integration', () => {
 
     const treeString = JSON.stringify(root!.toJSON());
     // Check that the empty state message is shown initially (English default)
-    expect(treeString).toContain('Enter a name');
+    expect(
+      treeString.includes('Enter a person or organisation name') ||
+        treeString.includes('Enter a name'),
+    ).toBe(true);
 
     // Cleanup
     ReactTestRenderer.act(() => {

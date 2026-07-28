@@ -14,6 +14,13 @@ import {
   type SourceUpdateResult,
   type UpdateProgress,
 } from './src/sanctions/updateService';
+import {
+  buildTokenIndex,
+  searchTokenIndex,
+  type ScreenResult,
+  type SearchOptions,
+  type TokenIndex,
+} from './src/sanctions/tokenMatch';
 
 function buildNormalizedLookup(names: Set<string>): Set<string> {
   const normalized = new Set<string>();
@@ -35,8 +42,11 @@ const seedNames: Set<string> = new Set([
 /** Mutable set used for screening — reloaded after updates. */
 export let allSanctionedNames: Set<string> = seedNames;
 
-/** Lowercased lookup set for O(1) matching. */
+/** Lowercased lookup set for O(1) exact matching. */
 let normalizedLookup: Set<string> = buildNormalizedLookup(seedNames);
+
+/** Inverted token index for Phase A ranked screening. */
+let tokenIndex: TokenIndex = buildTokenIndex(seedNames);
 
 let ready = false;
 let initPromise: Promise<void> | null = null;
@@ -44,6 +54,7 @@ let initPromise: Promise<void> | null = null;
 function applyNames(names: Set<string>) {
   allSanctionedNames = names;
   normalizedLookup = buildNormalizedLookup(names);
+  tokenIndex = buildTokenIndex(names);
 }
 
 /**
@@ -79,9 +90,9 @@ export async function reloadSanctionsData(): Promise<number> {
 }
 
 /**
- * Checks if a name is present in the sanctions lists.
- * @param name Name to check (case-insensitive, trimmed)
- * @returns true if sanctioned, false otherwise
+ * Exact full-string check (case-insensitive, trimmed).
+ * Kept for callers/tests that need boolean exact match only.
+ * Prefer {@link screenName} for interactive screening.
  */
 export function isSanctioned(name: string): boolean {
   if (!name) {
@@ -93,6 +104,23 @@ export function isSanctioned(name: string): boolean {
   }
   return normalizedLookup.has(normalized);
 }
+
+/**
+ * Phase A token screening: order-independent / partial name match with scores.
+ */
+export function screenName(
+  query: string,
+  options?: SearchOptions,
+): ScreenResult {
+  return searchTokenIndex(query, tokenIndex, options);
+}
+
+export type {
+  ScreenResult,
+  SearchOptions,
+  NameMatch,
+  ScreenStatus,
+} from './src/sanctions/tokenMatch';
 
 export async function getSanctionsMeta(): Promise<SanctionsMeta> {
   return loadMeta();

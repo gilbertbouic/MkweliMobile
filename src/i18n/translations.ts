@@ -42,8 +42,22 @@ const en = {
   placeholderName: 'Enter name to screen',
   screen: 'Screen',
   resultSanctioned: 'Sanctioned: Match found in database.',
-  resultClear: 'Not sanctioned: No match found.',
-  emptyHint: 'Enter a name and tap Screen to check against sanctions lists.',
+  resultStrong:
+    'Strong match: {{count}} high-confidence name(s) on the lists.',
+  resultPossible:
+    'Possible match: {{count}} name(s) to review (not a confirmed hit).',
+  resultClear: 'No list match above threshold for this query.',
+  resultShortQuery:
+    'Enter a longer name or at least one name part with 3+ letters.',
+  resultEmptyQuery: 'Enter a name to screen.',
+  tokensUsed: 'Name parts used: {{tokens}}',
+  badgeStrong: 'Strong',
+  badgePossible: 'Possible',
+  matchScore: '{{score}}%',
+  resultReviewHint:
+    'Review each hit against your records. Token matching finds name parts in any order; it is not identity verification. A clear result only means no score above the threshold.',
+  emptyHint:
+    'Enter a person or organisation name (full or partial) and tap Screen. Surname-only and any name order are supported.',
   updateOk:
     'Updated {{ok}}/{{total}} sources · {{names}} total names. Old lists replaced; temporary XML discarded.',
   updatePartial:
@@ -71,10 +85,10 @@ const en = {
     'Follow these steps to screen names and keep your sanctions lists up to date.',
   sectionWhatTitle: 'What this app does',
   sectionWhatBody:
-    'Mkweli screens a person or organisation name against official sanctions lists from the United Nations (UN), European Union (EU), United Kingdom (UK), and United States (OFAC SDN). It is intended for basic AML name checks. Results are exact name matches only (case-insensitive).',
+    'Mkweli screens a person or organisation name against official sanctions lists from the United Nations (UN), European Union (EU), United Kingdom (UK), and United States (OFAC SDN). It is intended for basic AML name checks. Matching is token-based: name parts are compared in any order, and partial queries (for example surname only) can return ranked possible hits with a score.',
   sectionScreenTitle: 'Screen a name',
   sectionScreenBody:
-    '1. On the main screen, type the full name in the search field.\n2. Tap Screen.\n3. Read the result:\n   • Red — “Sanctioned: Match found in database.” The name matches an entry on one or more lists.\n   • Green — “Not sanctioned: No match found.” No exact match was found.\n\nTips: Try alternate spellings, order of names, and common aliases if you expect a hit. Matching is exact after trimming spaces; partial names will not match.',
+    '1. On the main screen, type a person or organisation name (full or partial) in the search field.\n2. Tap Screen.\n3. Read the result:\n   • Red — strong match: high-confidence list name(s); review required.\n   • Orange — possible match: partial name-part agreement; review before acting.\n   • Green — no list match above the score threshold for this query.\n4. When hits appear, each row shows the list name and a score (0–100%).\n\nTips: Surname-only and reversed name order work. Very short single parts (under 3 letters) are ignored. Common single given names are scored more cautiously. Typos and alternate spellings are not yet fuzzy-matched—try known aliases if you expect a hit.',
   sectionUpdateTitle: 'Update sanctions lists',
   sectionUpdateBody:
     'Lists ship with the app as seed data. Every time you open the app, if lists are older than 30 days (or still seed data), Mkweli automatically downloads and parses the latest official lists when the device is online.\n\nYou can also refresh at any time:\n1. Ensure the device has internet access.\n2. On the main screen, open the Sanctions lists card.\n3. Tap Update lists.\n4. Wait while each source downloads (UN, EU, UK, USA). Progress shows for each step.\n5. When finished, only names are kept. Temporary download files are deleted. Previous lists for a source are replaced only if that source updates successfully.\n\nIf a source fails (network error, server issue), the app keeps the last good list for that source. You can try Update lists again later.\n\nAn orange notice appears if lists are older than 30 days or still using bundled seed data.',
@@ -86,7 +100,7 @@ const en = {
     'Screening works offline using the names already on the device (bundled seed or last successful download). Updating lists requires internet. The USA (OFAC) file is large and may take several minutes on a slow connection.',
   sectionLimitsTitle: 'Important limitations',
   sectionLimitsBody:
-    '• This tool checks exact name strings only; it is not fuzzy matching, identity verification, or a full KYC/AML system.\n• A “not sanctioned” result does not prove a person is clear of all risk.\n• Always follow your organisation’s compliance policy and, where required, use authorised screening systems and human review.\n• List content comes from public official sources; Mkweli does not alter those designations.',
+    '• Matching uses name tokens (parts) with scores; it is not fuzzy spelling match, biometric ID, or a full KYC/AML system.\n• A green / “no match above threshold” result does not prove a person is clear of all risk.\n• Possible matches require human review; shared surnames or common given names can appear for unrelated people.\n• Always follow your organisation’s compliance policy and, where required, use authorised screening systems and human review.\n• List content comes from public official sources; Mkweli does not alter those designations.',
 } as const;
 
 const fr: Record<TranslationKey, string> = {
@@ -114,9 +128,23 @@ const fr: Record<TranslationKey, string> = {
   placeholderName: 'Saisir un nom à contrôler',
   screen: 'Contrôler',
   resultSanctioned: 'Sanctionné : correspondance trouvée dans la base.',
-  resultClear: 'Non sanctionné : aucune correspondance.',
+  resultStrong:
+    'Correspondance forte : {{count}} nom(s) à forte confiance sur les listes.',
+  resultPossible:
+    'Correspondance possible : {{count}} nom(s) à examiner (pas une confirmation).',
+  resultClear:
+    'Aucune correspondance au-dessus du seuil pour cette recherche.',
+  resultShortQuery:
+    'Saisissez un nom plus long ou au moins une partie de nom de 3 lettres ou plus.',
+  resultEmptyQuery: 'Saisissez un nom à contrôler.',
+  tokensUsed: 'Parties de nom utilisées : {{tokens}}',
+  badgeStrong: 'Forte',
+  badgePossible: 'Possible',
+  matchScore: '{{score}} %',
+  resultReviewHint:
+    'Examinez chaque résultat par rapport à vos dossiers. La correspondance par jetons trouve des parties de nom dans n’importe quel ordre ; ce n’est pas une vérification d’identité. Un résultat vert signifie seulement qu’aucun score n’a dépassé le seuil.',
   emptyHint:
-    'Saisissez un nom et appuyez sur Contrôler pour le vérifier dans les listes de sanctions.',
+    'Saisissez un nom de personne ou d’organisation (complet ou partiel) puis Contrôler. Nom de famille seul et tout ordre des noms sont pris en charge.',
   updateOk:
     'Mis à jour {{ok}}/{{total}} sources · {{names}} noms au total. Anciennes listes remplacées ; XML temporaire supprimé.',
   updatePartial:
@@ -144,10 +172,10 @@ const fr: Record<TranslationKey, string> = {
     'Suivez ces étapes pour contrôler des noms et maintenir vos listes de sanctions à jour.',
   sectionWhatTitle: 'À quoi sert cette application',
   sectionWhatBody:
-    'Mkweli compare le nom d’une personne ou d’une organisation aux listes officielles de sanctions des Nations Unies (ONU), de l’Union européenne (UE), du Royaume-Uni (RU) et des États-Unis (OFAC SDN). Elle est destinée à des contrôles LBA basiques. Les résultats sont des correspondances exactes de noms uniquement (sans distinction de majuscules).',
+    'Mkweli compare le nom d’une personne ou d’une organisation aux listes officielles de sanctions des Nations Unies (ONU), de l’Union européenne (UE), du Royaume-Uni (RU) et des États-Unis (OFAC SDN). Elle est destinée à des contrôles LBA basiques. La correspondance est par jetons : les parties de nom sont comparées dans n’importe quel ordre, et les recherches partielles (par ex. nom de famille seul) peuvent renvoyer des résultats classés avec un score.',
   sectionScreenTitle: 'Contrôler un nom',
   sectionScreenBody:
-    '1. Sur l’écran principal, saisissez le nom complet dans le champ de recherche.\n2. Appuyez sur Contrôler.\n3. Lisez le résultat :\n   • Rouge — « Sanctionné : correspondance trouvée. » Le nom figure sur une ou plusieurs listes.\n   • Vert — « Non sanctionné : aucune correspondance. » Aucune correspondance exacte.\n\nAstuces : essayez d’autres orthographes, l’ordre des noms et les alias courants. La correspondance est exacte après suppression des espaces ; les noms partiels ne correspondent pas.',
+    '1. Sur l’écran principal, saisissez un nom de personne ou d’organisation (complet ou partiel).\n2. Appuyez sur Contrôler.\n3. Lisez le résultat :\n   • Rouge — correspondance forte : nom(s) à forte confiance ; examen requis.\n   • Orange — correspondance possible : accord partiel des parties de nom ; examinez avant d’agir.\n   • Vert — aucune correspondance au-dessus du seuil pour cette requête.\n4. Chaque ligne affiche le nom sur la liste et un score (0–100 %).\n\nAstuces : nom de famille seul et ordre inversé fonctionnent. Les parties trop courtes (moins de 3 lettres) sont ignorées. Les prénoms très courants en requête unique sont notés plus prudemment. Les fautes de frappe ne sont pas encore gérées en flou — essayez les alias connus.',
   sectionUpdateTitle: 'Mettre à jour les listes de sanctions',
   sectionUpdateBody:
     'Des listes de base sont fournies avec l’application. À chaque ouverture, si les listes ont plus de 30 jours (ou sont encore intégrées), Mkweli télécharge et analyse automatiquement les listes officielles lorsque l’appareil est en ligne.\n\nVous pouvez aussi actualiser à tout moment :\n1. Vérifiez que l’appareil a accès à Internet.\n2. Sur l’écran principal, ouvrez la carte Listes de sanctions.\n3. Appuyez sur Mettre à jour les listes.\n4. Attendez le téléchargement de chaque source (ONU, UE, RU, USA). La progression s’affiche.\n5. À la fin, seuls les noms sont conservés. Les fichiers temporaires sont supprimés. Les listes précédentes d’une source ne sont remplacées que si la mise à jour de cette source réussit.\n\nSi une source échoue (réseau, serveur), l’application conserve la dernière bonne liste pour cette source. Réessayez plus tard.\n\nUn message orange s’affiche si les listes ont plus de 30 jours ou utilisent encore les données intégrées.',
@@ -159,7 +187,7 @@ const fr: Record<TranslationKey, string> = {
     'Le contrôle fonctionne hors ligne avec les noms déjà présents sur l’appareil (données intégrées ou dernier téléchargement réussi). La mise à jour des listes nécessite Internet. Le fichier USA (OFAC) est volumineux et peut prendre plusieurs minutes sur une connexion lente.',
   sectionLimitsTitle: 'Limitations importantes',
   sectionLimitsBody:
-    '• Cet outil vérifie uniquement des chaînes de noms exactes ; ce n’est pas une recherche floue, une vérification d’identité ni un système KYC/LBA complet.\n• Un résultat « non sanctionné » ne prouve pas l’absence de tout risque.\n• Respectez toujours la politique de conformité de votre organisation et, le cas échéant, des systèmes de filtrage autorisés et une revue humaine.\n• Le contenu des listes provient de sources officielles publiques ; Mkweli ne modifie pas ces désignations.',
+    '• La correspondance utilise des jetons (parties de nom) avec scores ; ce n’est pas une recherche floue d’orthographe, une vérification biométrique ni un système KYC/LBA complet.\n• Un résultat vert / « aucun match au-dessus du seuil » ne prouve pas l’absence de tout risque.\n• Les correspondances possibles exigent une revue humaine ; des noms de famille partagés ou des prénoms courants peuvent concerner d’autres personnes.\n• Respectez toujours la politique de conformité de votre organisation et, le cas échéant, des systèmes de filtrage autorisés et une revue humaine.\n• Le contenu des listes provient de sources officielles publiques ; Mkweli ne modifie pas ces désignations.',
 };
 
 const pt: Record<TranslationKey, string> = {
@@ -187,9 +215,23 @@ const pt: Record<TranslationKey, string> = {
   placeholderName: 'Introduza o nome a verificar',
   screen: 'Verificar',
   resultSanctioned: 'Sancionado: correspondência encontrada na base de dados.',
-  resultClear: 'Não sancionado: nenhuma correspondência.',
+  resultStrong:
+    'Correspondência forte: {{count}} nome(s) de elevada confiança nas listas.',
+  resultPossible:
+    'Correspondência possível: {{count}} nome(s) a rever (não é confirmação).',
+  resultClear:
+    'Nenhuma correspondência acima do limiar para esta pesquisa.',
+  resultShortQuery:
+    'Introduza um nome mais longo ou pelo menos uma parte com 3 ou mais letras.',
+  resultEmptyQuery: 'Introduza um nome a verificar.',
+  tokensUsed: 'Partes do nome usadas: {{tokens}}',
+  badgeStrong: 'Forte',
+  badgePossible: 'Possível',
+  matchScore: '{{score}}%',
+  resultReviewHint:
+    'Reveja cada resultado face aos seus registos. A correspondência por tokens encontra partes do nome em qualquer ordem; não é verificação de identidade. Um resultado limpo só significa que nenhum score ultrapassou o limiar.',
   emptyHint:
-    'Introduza um nome e toque em Verificar para consultar as listas de sanções.',
+    'Introduza o nome de uma pessoa ou organização (completo ou parcial) e toque em Verificar. Apenas apelido e qualquer ordem de nomes são suportados.',
   updateOk:
     'Atualizadas {{ok}}/{{total}} fontes · {{names}} nomes no total. Listas antigas substituídas; XML temporário eliminado.',
   updatePartial:
@@ -217,10 +259,10 @@ const pt: Record<TranslationKey, string> = {
     'Siga estes passos para verificar nomes e manter as listas de sanções atualizadas.',
   sectionWhatTitle: 'O que esta aplicação faz',
   sectionWhatBody:
-    'O Mkweli compara o nome de uma pessoa ou organização com listas oficiais de sanções das Nações Unidas (ONU), União Europeia (UE), Reino Unido (RU) e Estados Unidos (OFAC SDN). Destina-se a controlos ALD básicos. Os resultados são apenas correspondências exatas de nomes (sem distinção de maiúsculas).',
+    'O Mkweli compara o nome de uma pessoa ou organização com listas oficiais de sanções das Nações Unidas (ONU), União Europeia (UE), Reino Unido (RU) e Estados Unidos (OFAC SDN). Destina-se a controlos ALD básicos. A correspondência é por tokens: as partes do nome são comparadas em qualquer ordem, e pesquisas parciais (por exemplo só apelido) podem devolver resultados ordenados com pontuação.',
   sectionScreenTitle: 'Verificar um nome',
   sectionScreenBody:
-    '1. No ecrã principal, escreva o nome completo no campo de pesquisa.\n2. Toque em Verificar.\n3. Leia o resultado:\n   • Vermelho — “Sancionado: correspondência encontrada.” O nome consta de uma ou mais listas.\n   • Verde — “Não sancionado: nenhuma correspondência.” Não foi encontrada correspondência exata.\n\nDicas: experimente grafias alternativas, ordem dos nomes e pseudónimos comuns. A correspondência é exata após remover espaços; nomes parciais não correspondem.',
+    '1. No ecrã principal, escreva o nome de uma pessoa ou organização (completo ou parcial).\n2. Toque em Verificar.\n3. Leia o resultado:\n   • Vermelho — correspondência forte: nome(s) de elevada confiança; revisão necessária.\n   • Laranja — correspondência possível: acordo parcial das partes do nome; reveja antes de agir.\n   • Verde — nenhuma correspondência acima do limiar para esta consulta.\n4. Cada linha mostra o nome na lista e uma pontuação (0–100%).\n\nDicas: só apelido e ordem invertida funcionam. Partes muito curtas (menos de 3 letras) são ignoradas. Nomes próprios muito comuns em pesquisa única são pontuados com mais cautela. Erros de digitação ainda não têm correspondência difusa — experimente alias conhecidos.',
   sectionUpdateTitle: 'Atualizar listas de sanções',
   sectionUpdateBody:
     'As listas são fornecidas com a aplicação como dados iniciais. Sempre que abrir a aplicação, se as listas tiverem mais de 30 dias (ou ainda forem dados incluídos), o Mkweli descarrega e analisa automaticamente as listas oficiais quando o dispositivo está online.\n\nTambém pode atualizar a qualquer momento:\n1. Certifique-se de que o dispositivo tem Internet.\n2. No ecrã principal, abra o cartão Listas de sanções.\n3. Toque em Atualizar listas.\n4. Aguarde o download de cada fonte (ONU, UE, RU, EUA). O progresso é mostrado.\n5. No fim, apenas os nomes são guardados. Os ficheiros temporários são eliminados. As listas anteriores de uma fonte só são substituídas se a atualização dessa fonte for bem-sucedida.\n\nSe uma fonte falhar (rede, servidor), a aplicação mantém a última lista válida dessa fonte. Pode tentar novamente mais tarde.\n\nUm aviso laranja aparece se as listas tiverem mais de 30 dias ou ainda usarem os dados incluídos.',
@@ -232,7 +274,7 @@ const pt: Record<TranslationKey, string> = {
     'A triagem funciona offline com os nomes já no dispositivo (dados incluídos ou último download bem-sucedido). Atualizar listas exige Internet. O ficheiro dos EUA (OFAC) é grande e pode demorar vários minutos numa ligação lenta.',
   sectionLimitsTitle: 'Limitações importantes',
   sectionLimitsBody:
-    '• Esta ferramenta verifica apenas cadeias de nomes exatas; não é correspondência aproximada, verificação de identidade nem um sistema KYC/ALD completo.\n• Um resultado “não sancionado” não prova ausência de todo o risco.\n• Siga sempre a política de conformidade da sua organização e, quando necessário, sistemas de triagem autorizados e revisão humana.\n• O conteúdo das listas provém de fontes oficiais públicas; o Mkweli não altera essas designações.',
+    '• A correspondência usa tokens (partes do nome) com pontuações; não é correspondência difusa de ortografia, identificação biométrica nem um sistema KYC/ALD completo.\n• Um resultado verde / “sem match acima do limiar” não prova ausência de todo o risco.\n• Correspondências possíveis exigem revisão humana; apelidos partilhados ou nomes próprios comuns podem referir-se a outras pessoas.\n• Siga sempre a política de conformidade da sua organização e, quando necessário, sistemas de triagem autorizados e revisão humana.\n• O conteúdo das listas provém de fontes oficiais públicas; o Mkweli não altera essas designações.',
 };
 
 const es: Record<TranslationKey, string> = {
@@ -260,9 +302,23 @@ const es: Record<TranslationKey, string> = {
   placeholderName: 'Introduzca el nombre a verificar',
   screen: 'Verificar',
   resultSanctioned: 'Sancionado: coincidencia encontrada en la base de datos.',
-  resultClear: 'No sancionado: no se encontró coincidencia.',
+  resultStrong:
+    'Coincidencia fuerte: {{count}} nombre(s) de alta confianza en las listas.',
+  resultPossible:
+    'Posible coincidencia: {{count}} nombre(s) a revisar (no es una confirmación).',
+  resultClear:
+    'Ninguna coincidencia por encima del umbral para esta consulta.',
+  resultShortQuery:
+    'Introduzca un nombre más largo o al menos una parte con 3 o más letras.',
+  resultEmptyQuery: 'Introduzca un nombre para verificar.',
+  tokensUsed: 'Partes del nombre usadas: {{tokens}}',
+  badgeStrong: 'Fuerte',
+  badgePossible: 'Posible',
+  matchScore: '{{score}}%',
+  resultReviewHint:
+    'Revise cada resultado frente a sus registros. La coincidencia por tokens encuentra partes del nombre en cualquier orden; no es verificación de identidad. Un resultado limpio solo significa que ninguna puntuación superó el umbral.',
   emptyHint:
-    'Introduzca un nombre y pulse Verificar para consultarlo en las listas de sanciones.',
+    'Introduzca el nombre de una persona u organización (completo o parcial) y pulse Verificar. Se admiten solo apellido y cualquier orden de nombres.',
   updateOk:
     'Actualizadas {{ok}}/{{total}} fuentes · {{names}} nombres en total. Listas antiguas reemplazadas; XML temporal eliminado.',
   updatePartial:
@@ -290,10 +346,10 @@ const es: Record<TranslationKey, string> = {
     'Siga estos pasos para verificar nombres y mantener actualizadas las listas de sanciones.',
   sectionWhatTitle: 'Qué hace esta aplicación',
   sectionWhatBody:
-    'Mkweli compara el nombre de una persona u organización con las listas oficiales de sanciones de las Naciones Unidas (ONU), la Unión Europea (UE), el Reino Unido (RU) y Estados Unidos (OFAC SDN). Está pensada para controles PLA básicos. Los resultados son solo coincidencias exactas de nombres (sin distinguir mayúsculas).',
+    'Mkweli compara el nombre de una persona u organización con las listas oficiales de sanciones de las Naciones Unidas (ONU), la Unión Europea (UE), el Reino Unido (RU) y Estados Unidos (OFAC SDN). Está pensada para controles PLA básicos. La coincidencia es por tokens: las partes del nombre se comparan en cualquier orden, y las consultas parciales (por ejemplo solo apellido) pueden devolver resultados clasificados con una puntuación.',
   sectionScreenTitle: 'Verificar un nombre',
   sectionScreenBody:
-    '1. En la pantalla principal, escriba el nombre completo en el campo de búsqueda.\n2. Pulse Verificar.\n3. Lea el resultado:\n   • Rojo — “Sancionado: coincidencia encontrada.” El nombre figura en una o más listas.\n   • Verde — “No sancionado: no se encontró coincidencia.” No hubo coincidencia exacta.\n\nConsejos: pruebe ortografías alternativas, el orden de los nombres y alias habituales. La coincidencia es exacta tras quitar espacios; los nombres parciales no coinciden.',
+    '1. En la pantalla principal, escriba el nombre de una persona u organización (completo o parcial).\n2. Pulse Verificar.\n3. Lea el resultado:\n   • Rojo — coincidencia fuerte: nombre(s) de alta confianza; se requiere revisión.\n   • Naranja — posible coincidencia: acuerdo parcial de partes del nombre; revise antes de actuar.\n   • Verde — ninguna coincidencia por encima del umbral para esta consulta.\n4. Cada fila muestra el nombre en la lista y una puntuación (0–100%).\n\nConsejos: solo apellido y orden invertido funcionan. Las partes muy cortas (menos de 3 letras) se ignoran. Los nombres de pila muy comunes en consulta única se puntúan con más cautela. Los errores tipográficos aún no tienen coincidencia difusa: pruebe alias conocidos.',
   sectionUpdateTitle: 'Actualizar las listas de sanciones',
   sectionUpdateBody:
     'Las listas se incluyen con la aplicación como datos iniciales. Cada vez que abra la aplicación, si las listas tienen más de 30 días (o siguen siendo datos incluidos), Mkweli descarga y analiza automáticamente las listas oficiales cuando el dispositivo está en línea.\n\nTambién puede actualizar en cualquier momento:\n1. Asegúrese de que el dispositivo tiene Internet.\n2. En la pantalla principal, abra la tarjeta Listas de sanciones.\n3. Pulse Actualizar listas.\n4. Espere a que se descargue cada fuente (ONU, UE, RU, EE. UU.). Se muestra el progreso.\n5. Al terminar, solo se guardan los nombres. Los archivos temporales se eliminan. Las listas anteriores de una fuente solo se reemplazan si la actualización de esa fuente tiene éxito.\n\nSi una fuente falla (red, servidor), la aplicación conserva la última lista válida de esa fuente. Puede reintentarlo más tarde.\n\nAparece un aviso naranja si las listas tienen más de 30 días o aún usan los datos incluidos.',
@@ -305,7 +361,7 @@ const es: Record<TranslationKey, string> = {
     'El cribado funciona sin conexión con los nombres ya presentes en el dispositivo (datos incluidos o última descarga correcta). Actualizar las listas requiere Internet. El archivo de EE. UU. (OFAC) es grande y puede tardar varios minutos con una conexión lenta.',
   sectionLimitsTitle: 'Limitaciones importantes',
   sectionLimitsBody:
-    '• Esta herramienta solo comprueba cadenas de nombres exactas; no es coincidencia aproximada, verificación de identidad ni un sistema KYC/PLA completo.\n• Un resultado “no sancionado” no demuestra la ausencia de todo riesgo.\n• Siga siempre la política de cumplimiento de su organización y, cuando corresponda, sistemas de cribado autorizados y revisión humana.\n• El contenido de las listas proviene de fuentes oficiales públicas; Mkweli no modifica esas designaciones.',
+    '• La coincidencia usa tokens (partes del nombre) con puntuaciones; no es coincidencia difusa de ortografía, identificación biométrica ni un sistema KYC/PLA completo.\n• Un resultado verde / “sin coincidencia por encima del umbral” no demuestra la ausencia de todo riesgo.\n• Las posibles coincidencias exigen revisión humana; apellidos compartidos o nombres de pila comunes pueden referirse a otras personas.\n• Siga siempre la política de cumplimiento de su organización y, cuando corresponda, sistemas de cribado autorizados y revisión humana.\n• El contenido de las listas proviene de fuentes oficiales públicas; Mkweli no modifica esas designaciones.',
 };
 
 export const translations: Record<LanguageCode, Record<TranslationKey, string>> =
