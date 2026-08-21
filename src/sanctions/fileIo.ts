@@ -21,6 +21,12 @@ const READ_CHUNK = 256 * 1024; // 256 KB binary read slices
 /** Abort a hanging host if headers / first byte never arrive. */
 const DEFAULT_FIRST_BYTE_MS = 25_000;
 
+function tooLarge(bytes: number, maxBytes?: number): void {
+  if (maxBytes && bytes > maxBytes) {
+    throw new Error(`File too large (${bytes} bytes; max ${maxBytes})`);
+  }
+}
+
 const DEFAULT_HEADERS: Record<string, string> = {
   Accept: '*/*',
   'Accept-Encoding': 'identity',
@@ -177,6 +183,7 @@ async function downloadWithFetch(
   headers: Record<string, string>,
   onBytes?: (received: number, total: number) => void,
   firstByteTimeoutMs: number = DEFAULT_FIRST_BYTE_MS,
+  maxBytes?: number,
 ): Promise<{bytesWritten: number; statusCode: number}> {
   const controller =
     typeof AbortController !== 'undefined' ? new AbortController() : null;
@@ -204,8 +211,11 @@ async function downloadWithFetch(
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
+    const declared = Number(response.headers.get('content-length') || 0);
+    tooLarge(declared, maxBytes);
     const buffer = await response.arrayBuffer();
     const bytes = new Uint8Array(buffer);
+    tooLarge(bytes.length, maxBytes);
     await writeBytesToFile(destPath, bytes, onBytes);
     return {bytesWritten: bytes.length, statusCode: response.status};
   } catch (err) {
@@ -234,6 +244,7 @@ function downloadWithXhr(
   headers: Record<string, string>,
   onBytes?: (received: number, total: number) => void,
   firstByteTimeoutMs: number = DEFAULT_FIRST_BYTE_MS,
+  maxBytes?: number,
 ): Promise<{bytesWritten: number; statusCode: number}> {
   return new Promise((resolve, reject) => {
     try {
@@ -275,6 +286,23 @@ function downloadWithXhr(
       xhr.onreadystatechange = () => {
         if (xhr.readyState >= 2) {
           clearFirstByte();
+          if (maxBytes) {
+            const declared = Number(
+              xhr.getResponseHeader('Content-Length') || 0,
+            );
+            if (declared > maxBytes) {
+              try {
+                xhr.abort();
+              } catch {
+                // ignore
+              }
+              fail(
+                new Error(
+                  `File too large (${declared} bytes; max ${maxBytes})`,
+                ),
+              );
+            }
+          }
         }
       };
       xhr.onprogress = event => {
@@ -292,6 +320,7 @@ function downloadWithXhr(
               return;
             }
             const bytes = new Uint8Array(xhr.response as ArrayBuffer);
+            tooLarge(bytes.length, maxBytes);
             await writeBytesToFile(destPath, bytes, onBytes);
             if (settled) {
               return;
@@ -335,8 +364,10 @@ async function downloadWithRnfs(
   headers: Record<string, string>,
   onBytes?: (received: number, total: number) => void,
   firstByteTimeoutMs: number = DEFAULT_FIRST_BYTE_MS,
+  maxBytes?: number,
 ): Promise<{bytesWritten: number; statusCode: number}> {
   let beginFired = false;
+  let skippedLarge = false;
   const {jobId, promise} = RNFS.downloadFile({
     fromUrl: url,
     toFile: destPath,
@@ -349,6 +380,17 @@ async function downloadWithRnfs(
     headers,
     begin: res => {
       beginFired = true;
+      if (maxBytes && res.contentLength > maxBytes) {
+        skippedLarge = true;
+        try {
+          if (typeof jobId === 'number') {
+            RNFS.stopDownload(jobId);
+          }
+        } catch {
+          // ignore
+        }
+        return;
+      }
       onBytes?.(0, res.contentLength || 0);
     },
     progress: res => {
@@ -380,6 +422,12 @@ async function downloadWithRnfs(
         },
         err => {
           clearTimeout(watchdog);
+          if (skippedLarge && maxBytes) {
+            reject(
+              new Error(`File too large (max ${maxBytes} bytes) (RNFS)`),
+            );
+            return;
+          }
           reject(
             beginFired
               ? err
@@ -390,11 +438,15 @@ async function downloadWithRnfs(
     },
   );
 
+  if (skippedLarge && maxBytes) {
+    throw new Error(`File too large (max ${maxBytes} bytes) (RNFS)`);
+  }
   if (result.statusCode < 200 || result.statusCode >= 300) {
     throw new Error(`HTTP ${result.statusCode}`);
   }
   const stat = await RNFS.stat(destPath);
   const size = Number(stat.size);
+  tooLarge(size, maxBytes);
   if (!size || size < 100) {
     throw new Error('Downloaded file is empty or too small');
   }
@@ -426,6 +478,8 @@ export async function downloadUrlToFile(
     alternateUrls?: string[];
     /** Abort a URL if no first byte arrives within this many ms. */
     firstByteTimeoutMs?: number;
+    /** Skip this URL if the body is larger than this (try fallbacks). */
+    maxBytes?: number;
   },
 ): Promise<{bytesWritten: number; statusCode: number}> {
   const timeoutMs = options?.timeoutMs ?? 10 * 60 * 1000;
@@ -450,6 +504,7 @@ export async function downloadUrlToFile(
           headers,
           options?.onBytes,
           firstByteTimeoutMs,
+          options?.maxBytes,
         ),
     },
     {
@@ -462,6 +517,7 @@ export async function downloadUrlToFile(
           headers,
           options?.onBytes,
           firstByteTimeoutMs,
+          options?.maxBytes,
         ),
     },
     {
@@ -474,6 +530,7 @@ export async function downloadUrlToFile(
           headers,
           options?.onBytes,
           firstByteTimeoutMs,
+          options?.maxBytes,
         ),
     },
   ];
@@ -489,7 +546,7 @@ export async function downloadUrlToFile(
         const msg = errMessage(err);
         errors.push(`${t.name}@${candidate}: ${msg}`);
         // Host never answered — other transports to the same URL will hang too.
-        if (/^No response after/i.test(msg)) {
+        if (/^No response after/i.test(msg) || /File too large/i.test(msg)) {
           break;
         }
       }

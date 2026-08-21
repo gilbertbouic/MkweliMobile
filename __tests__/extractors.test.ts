@@ -241,6 +241,50 @@ Last Updated,Unique ID,Name 6,Name 1,Name 2,Name 3,Name 4,Name 5,Name type
     );
   });
 
+  test('extractUkCsvNames reads live FCDO extra columns and non-latin script', () => {
+    const csv =
+      'Report Date: 20-Aug-2026\n' +
+      'Last Updated,Unique ID,OFSI Group ID,UN Reference Number,Name 6,Name 1,Name 2,Name 3,Name 4,Name 5,Name type,Alias strength,Title,Name non-latin script\n' +
+      '09/04/2025,RUS0251,14196,,PUTIN,Vladimir,Vladimirovich,,,,Primary Name,,,владимир владимирович путин\n';
+    const names = extractUkCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'Vladimir Vladimirovich PUTIN',
+        'владимир владимирович путин',
+      ]),
+    );
+  });
+
+  test('extractUkCsvNames parses OpenSanctions names.txt (one name per line)', () => {
+    const csv = `Vladimir Vladimirovich PUTIN
+PUTIN, Vladimir Vladimirovich
+Rosneft PAO`;
+    const names = extractUkCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'Vladimir Vladimirovich PUTIN',
+        'PUTIN, Vladimir Vladimirovich',
+        'Rosneft PAO',
+      ]),
+    );
+  });
+
+  test('extractUkCsvNames parses OpenSanctions simple CSV with aliases', () => {
+    const csv = `"id","schema","name","aliases","dataset"
+"1","Person","Vladimir Vladimirovich PUTIN","PUTIN, Vladimir;Vladimir Putin","UK FCDO"
+"2","Organization","Rosneft PAO","","UK FCDO"`;
+    const names = extractUkCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'Vladimir Vladimirovich PUTIN',
+        'PUTIN, Vladimir',
+        'Vladimir PUTIN',
+        'Vladimir Putin',
+        'Rosneft PAO',
+      ]),
+    );
+  });
+
   test('extractUsaCsvNames parses headered OFAC-style CSV', () => {
     const csv = `name,type,entity_number,designations
 "PUTIN, Vladimir Vladimirovich",individual,12345,"CEO Russia"

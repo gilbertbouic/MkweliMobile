@@ -5,8 +5,9 @@
  * Live CSV formats (verified 2026-07):
  *   EU  FSD  — semicolon-delimited + BOM; name column `Naal_wholename`
  *              (OpenSanctions names.txt / targets.simple.csv also accepted)
- *   UK  OFSI — comma-delimited; optional "Report Date:" preamble; names in
- *              `Name 1`…`Name 6` (joined in that order, empties skipped)
+ *   UK  OFSI / FCDO — comma-delimited; optional "Report Date:" preamble;
+ *              names in `Name 1`…`Name 6` plus `Name non-latin script`
+ *              (OpenSanctions names.txt / targets.simple.csv also accepted)
  *   USA OFAC — comma-delimited SDN.CSV with NO header; EntNum at 0, name at 1
  */
 
@@ -482,7 +483,7 @@ function resolveCsvNameIndexes(
       return null;
     }
     case 'uk': {
-      // Live OFSI CSV: Name 1 … Name 6 (not a single "Names" column).
+      // Live FCDO/OFSI CSV: Name 1 … Name 6 (not a single "Names" column).
       const partIndexes: number[] = [];
       for (let n = 1; n <= 6; n++) {
         const idx = normalized.indexOf(`name ${n}`);
@@ -491,26 +492,37 @@ function resolveCsvNameIndexes(
         }
       }
       if (partIndexes.length > 0) {
+        const nonLatin = normalized.indexOf('name non-latin script');
         return {
           indexes: partIndexes,
           headerless: false,
-          aliasIndex: null,
+          aliasIndex: nonLatin >= 0 ? nonLatin : null,
           plainLines: false,
         };
       }
-      // Simpler single-column formats (tests / older exports)
+      // Simpler single-column formats (tests / OpenSanctions / older exports)
       for (const c of ['names', 'name', 'entity name', 'full name', 'fullname']) {
         const idx = normalized.indexOf(c);
         if (idx !== -1) {
+          const aliasIdx = normalized.indexOf('aliases');
           return {
             indexes: [idx],
             headerless: false,
-            aliasIndex: null,
+            aliasIndex: aliasIdx >= 0 ? aliasIdx : null,
             plainLines: false,
           };
         }
       }
-      // Preamble lines like "Report Date: …" are not headers
+      // OpenSanctions names.txt — one name per line, no header.
+      // Preamble lines like "Report Date: …" are skipped above (no match).
+      if (firstRaw.length >= 2 && !/^report date:/i.test(firstRaw)) {
+        return {
+          indexes: [0],
+          headerless: true,
+          aliasIndex: null,
+          plainLines: true,
+        };
+      }
       return null;
     }
     case 'usa': {

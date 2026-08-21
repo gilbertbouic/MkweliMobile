@@ -99,6 +99,7 @@ async function downloadXmlToFile(
       onBytes,
       alternateUrls: source.alternateUrls,
       firstByteTimeoutMs: source.firstByteTimeoutMs,
+      maxBytes: source.maxBytes,
     });
   } catch (err) {
     const message =

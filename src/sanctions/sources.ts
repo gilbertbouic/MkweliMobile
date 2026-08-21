@@ -26,6 +26,11 @@ export interface SanctionsSource {
    * then try the next transport or fallback URL. Default is applied in file I/O.
    */
   firstByteTimeoutMs?: number;
+  /**
+   * Skip a URL (try fallbacks) if Content-Length or the downloaded body exceeds
+   * this many bytes. Used to avoid 50MB official dumps on mobile.
+   */
+  maxBytes?: number;
 }
 
 export const SANCTIONS_SOURCES: SanctionsSource[] = [
@@ -72,8 +77,16 @@ export const SANCTIONS_SOURCES: SanctionsSource[] = [
   {
     id: 'uk',
     label: 'UK',
+    // Official FCDO CSV is ~50MB (full statements of reasons). Phones OOM or
+    // appear to hang during parse. Skip it when larger than maxBytes and use
+    // OpenSanctions' daily names extract of the same UK Sanctions List.
     url: 'https://sanctionslist.fcdo.gov.uk/docs/UK-Sanctions-List.csv',
+    alternateUrls: [
+      'https://data.opensanctions.org/datasets/latest/gb_fcdo_sanctions/names.txt',
+      'https://data.opensanctions.org/datasets/latest/gb_fcdo_sanctions/targets.simple.csv',
+    ],
     tempFileName: 'uk-sanctions-list.csv',
+    maxBytes: 8 * 1024 * 1024,
   },
 ];
 
