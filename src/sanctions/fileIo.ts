@@ -18,6 +18,8 @@ import RNFS from 'react-native-fs';
 
 const WRITE_CHUNK = 256 * 1024; // 256 KB base64 write slices
 const READ_CHUNK = 256 * 1024; // 256 KB binary read slices
+/** Abort a hanging host if headers / first byte never arrive. */
+const DEFAULT_FIRST_BYTE_MS = 25_000;
 
 const DEFAULT_HEADERS: Record<string, string> = {
   Accept: '*/*',
@@ -174,9 +176,18 @@ async function downloadWithFetch(
   timeoutMs: number,
   headers: Record<string, string>,
   onBytes?: (received: number, total: number) => void,
+  firstByteTimeoutMs: number = DEFAULT_FIRST_BYTE_MS,
 ): Promise<{bytesWritten: number; statusCode: number}> {
   const controller =
     typeof AbortController !== 'undefined' ? new AbortController() : null;
+  let gotHeaders = false;
+  const firstByteTimer = controller
+    ? setTimeout(() => {
+        if (!gotHeaders) {
+          controller.abort();
+        }
+      }, firstByteTimeoutMs)
+    : null;
   const timer = controller
     ? setTimeout(() => controller.abort(), timeoutMs)
     : null;
@@ -186,6 +197,10 @@ async function downloadWithFetch(
       headers,
       signal: controller?.signal,
     });
+    gotHeaders = true;
+    if (firstByteTimer) {
+      clearTimeout(firstByteTimer);
+    }
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -195,10 +210,16 @@ async function downloadWithFetch(
     return {bytesWritten: bytes.length, statusCode: response.status};
   } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
+      if (!gotHeaders) {
+        throw new Error(`No response after ${firstByteTimeoutMs}ms`);
+      }
       throw new Error(`Download timed out after ${timeoutMs}ms`);
     }
     throw err;
   } finally {
+    if (firstByteTimer) {
+      clearTimeout(firstByteTimer);
+    }
     if (timer) {
       clearTimeout(timer);
     }
@@ -212,6 +233,7 @@ function downloadWithXhr(
   timeoutMs: number,
   headers: Record<string, string>,
   onBytes?: (received: number, total: number) => void,
+  firstByteTimeoutMs: number = DEFAULT_FIRST_BYTE_MS,
 ): Promise<{bytesWritten: number; statusCode: number}> {
   return new Promise((resolve, reject) => {
     try {
@@ -219,6 +241,30 @@ function downloadWithXhr(
       xhr.open('GET', url, true);
       xhr.responseType = 'arraybuffer';
       xhr.timeout = timeoutMs;
+      let gotHeaders = false;
+      let settled = false;
+      const fail = (err: Error) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        clearTimeout(firstByteTimer);
+        reject(err);
+      };
+      const firstByteTimer = setTimeout(() => {
+        if (!gotHeaders) {
+          try {
+            xhr.abort();
+          } catch {
+            // ignore
+          }
+          fail(new Error(`No response after ${firstByteTimeoutMs}ms (XHR)`));
+        }
+      }, firstByteTimeoutMs);
+      const clearFirstByte = () => {
+        gotHeaders = true;
+        clearTimeout(firstByteTimer);
+      };
       for (const [k, v] of Object.entries(headers)) {
         try {
           xhr.setRequestHeader(k, v);
@@ -226,29 +272,50 @@ function downloadWithXhr(
           // some headers are forbidden on XHR
         }
       }
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState >= 2) {
+          clearFirstByte();
+        }
+      };
       xhr.onprogress = event => {
+        clearFirstByte();
         if (event.lengthComputable) {
           onBytes?.(event.loaded, event.total);
         }
       };
       xhr.onload = () => {
+        clearFirstByte();
         void (async () => {
           try {
             if (xhr.status < 200 || xhr.status >= 300) {
-              reject(new Error(`HTTP ${xhr.status}`));
+              fail(new Error(`HTTP ${xhr.status}`));
               return;
             }
             const bytes = new Uint8Array(xhr.response as ArrayBuffer);
             await writeBytesToFile(destPath, bytes, onBytes);
+            if (settled) {
+              return;
+            }
+            settled = true;
             resolve({bytesWritten: bytes.length, statusCode: xhr.status || 200});
           } catch (e) {
-            reject(e);
+            fail(e instanceof Error ? e : new Error(String(e)));
           }
         })();
       };
-      xhr.onerror = () => reject(new Error('Network request failed (XHR)'));
-      xhr.ontimeout = () =>
-        reject(new Error(`Download timed out after ${timeoutMs}ms (XHR)`));
+      xhr.onerror = () => {
+        fail(new Error('Network request failed (XHR)'));
+      };
+      xhr.onabort = () => {
+        if (!gotHeaders) {
+          // first-byte timer already rejected
+          return;
+        }
+        fail(new Error('Download aborted (XHR)'));
+      };
+      xhr.ontimeout = () => {
+        fail(new Error(`Download timed out after ${timeoutMs}ms (XHR)`));
+      };
       xhr.send();
     } catch (e) {
       reject(e);
@@ -267,24 +334,61 @@ async function downloadWithRnfs(
   timeoutMs: number,
   headers: Record<string, string>,
   onBytes?: (received: number, total: number) => void,
+  firstByteTimeoutMs: number = DEFAULT_FIRST_BYTE_MS,
 ): Promise<{bytesWritten: number; statusCode: number}> {
-  const result = await RNFS.downloadFile({
+  let beginFired = false;
+  const {jobId, promise} = RNFS.downloadFile({
     fromUrl: url,
     toFile: destPath,
     background: false,
     discretionary: false,
     cacheable: false,
-    connectionTimeout: Math.min(60_000, timeoutMs),
+    connectionTimeout: Math.min(firstByteTimeoutMs, timeoutMs),
     readTimeout: timeoutMs,
     progressDivider: 5,
     headers,
     begin: res => {
+      beginFired = true;
       onBytes?.(0, res.contentLength || 0);
     },
     progress: res => {
+      beginFired = true;
       onBytes?.(res.bytesWritten, res.contentLength || 0);
     },
-  }).promise;
+  });
+
+  const result = await new Promise<{bytesWritten: number; statusCode: number}>(
+    (resolve, reject) => {
+      const watchdog = setTimeout(() => {
+        if (!beginFired) {
+          try {
+            if (typeof jobId === 'number') {
+              RNFS.stopDownload(jobId);
+            }
+          } catch {
+            // ignore
+          }
+          reject(
+            new Error(`No response after ${firstByteTimeoutMs}ms (RNFS)`),
+          );
+        }
+      }, firstByteTimeoutMs);
+      promise.then(
+        value => {
+          clearTimeout(watchdog);
+          resolve(value);
+        },
+        err => {
+          clearTimeout(watchdog);
+          reject(
+            beginFired
+              ? err
+              : new Error(`No response after ${firstByteTimeoutMs}ms (RNFS)`),
+          );
+        },
+      );
+    },
+  );
 
   if (result.statusCode < 200 || result.statusCode >= 300) {
     throw new Error(`HTTP ${result.statusCode}`);
@@ -320,9 +424,13 @@ export async function downloadUrlToFile(
     headers?: Record<string, string>;
     /** Extra URLs to try if `url` fails (same file, different host/path). */
     alternateUrls?: string[];
+    /** Abort a URL if no first byte arrives within this many ms. */
+    firstByteTimeoutMs?: number;
   },
 ): Promise<{bytesWritten: number; statusCode: number}> {
   const timeoutMs = options?.timeoutMs ?? 10 * 60 * 1000;
+  const firstByteTimeoutMs =
+    options?.firstByteTimeoutMs ?? DEFAULT_FIRST_BYTE_MS;
   const headers = {...DEFAULT_HEADERS, ...options?.headers};
   const urls = [url, ...(options?.alternateUrls ?? [])].filter(Boolean);
   const errors: string[] = [];
@@ -335,17 +443,38 @@ export async function downloadUrlToFile(
     {
       name: 'fetch',
       run: u =>
-        downloadWithFetch(u, destPath, timeoutMs, headers, options?.onBytes),
+        downloadWithFetch(
+          u,
+          destPath,
+          timeoutMs,
+          headers,
+          options?.onBytes,
+          firstByteTimeoutMs,
+        ),
     },
     {
       name: 'xhr',
       run: u =>
-        downloadWithXhr(u, destPath, timeoutMs, headers, options?.onBytes),
+        downloadWithXhr(
+          u,
+          destPath,
+          timeoutMs,
+          headers,
+          options?.onBytes,
+          firstByteTimeoutMs,
+        ),
     },
     {
       name: 'rnfs',
       run: u =>
-        downloadWithRnfs(u, destPath, timeoutMs, headers, options?.onBytes),
+        downloadWithRnfs(
+          u,
+          destPath,
+          timeoutMs,
+          headers,
+          options?.onBytes,
+          firstByteTimeoutMs,
+        ),
     },
   ];
 
@@ -357,7 +486,12 @@ export async function downloadUrlToFile(
         return result;
       } catch (err) {
         await safeUnlink(destPath);
-        errors.push(`${t.name}@${candidate}: ${errMessage(err)}`);
+        const msg = errMessage(err);
+        errors.push(`${t.name}@${candidate}: ${msg}`);
+        // Host never answered — other transports to the same URL will hang too.
+        if (/^No response after/i.test(msg)) {
+          break;
+        }
       }
     }
   }

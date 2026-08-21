@@ -177,6 +177,36 @@ Abu Ali,individual,2001-02-01`;
     );
   });
 
+  test('extractEuCsvNames parses OpenSanctions names.txt (one name per line)', () => {
+    const csv = `Saddam Hussein Al-Tikriti
+Abu Ali
+PUTIN, Vladimir Vladimirovich`;
+    const names = extractEuCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'Saddam Hussein Al-Tikriti',
+        'Abu Ali',
+        'PUTIN, Vladimir Vladimirovich',
+        'Vladimir Vladimirovich PUTIN',
+      ]),
+    );
+  });
+
+  test('extractEuCsvNames parses OpenSanctions simple CSV with aliases', () => {
+    const csv = `"id","schema","name","aliases","dataset"
+"1","Person","Saddam Hussein Al-Tikriti","Abu Ali;Saddam Hussein","EU FSF"
+"2","Organization","Rosneft PAO","","EU FSF"`;
+    const names = extractEuCsvNames(csv);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'Saddam Hussein Al-Tikriti',
+        'Abu Ali',
+        'Saddam Hussein',
+        'Rosneft PAO',
+      ]),
+    );
+  });
+
   test('extractEuCsvNames handles quoted fields', () => {
     const csv = `name,type,designation_date
 "Hussein, Saddam",individual,2001-01-01

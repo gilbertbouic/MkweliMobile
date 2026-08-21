@@ -5,11 +5,11 @@ Distributed via **GitHub** as a signed APK — **not** on the Google Play Store.
 
 | | |
 |---|---|
-| **Version** | **1.0.12** (`versionCode` 12) |
+| **Version** | **1.0.13** (`versionCode` 13) |
 | **Package** | `com.mkwelimobile` |
 | **Product site** | **[aml.mkweli.tech](https://aml.mkweli.tech/)** |
-| **Download APK** | **[Mkweli_v1.0.12.apk](https://aml.mkweli.tech/Mkweli_v1.0.12.apk)** (official host only) |
-| **SHA-256** | `c3ca9da655a5ce2bf219b89f1396042278b87d014fb3ca789547b411d8243228` |
+| **Download APK** | **[Mkweli_v1.0.13.apk](https://aml.mkweli.tech/Mkweli_v1.0.13.apk)** (official host only) |
+| **SHA-256** | `3341ea8f7e5ea73e43c67fb3b72e5ad2dfa67efc4cf33cbca3e66e556efa8312` |
 | **Support** | [support@mkweli.tech](mailto:support@mkweli.tech) |
 | **Stack** | React Native 0.83 · Hermes · minSdk 24 |
 
@@ -28,12 +28,12 @@ Distributed via **GitHub** as a signed APK — **not** on the Google Play Store.
 |--------|--------|--------|
 | USA (OFAC SDN) | CSV | Official Treasury/OFAC URLs first; **OpenSanctions CDN** fallback when OFAC hosts are blocked |
 | UN | XML | UN Security Council consolidated list |
-| EU | CSV (`;`) | EU FSD full list (`Naal_wholename`) |
+| EU | CSV (`;`) | Official FSD URL first (fails fast if `webgate.ec.europa.eu` hangs); **OpenSanctions CDN** fallback |
 | UK (FCDO) | CSV | UK Sanctions List from `sanctionslist.fcdo.gov.uk` |
 
 ## Install the APK (end users)
 
-1. Download **[Mkweli_v1.0.12.apk](https://aml.mkweli.tech/Mkweli_v1.0.12.apk)** from the official product site.
+1. Download **[Mkweli_v1.0.13.apk](https://aml.mkweli.tech/Mkweli_v1.0.13.apk)** from the official product site.
 2. Optionally verify the SHA-256 above matches the file you downloaded.
 3. On Android, allow install from the browser/file manager if prompted.
 4. Open the app on Wi‑Fi so lists can auto-update (USA can take a minute if using the CDN fallback).
@@ -79,7 +79,7 @@ Signing is configured via `android/gradle.properties` (`MYAPP_UPLOAD_*`) and the
 cd android
 ./gradlew :app:assembleRelease
 # Output: android/app/build/outputs/apk/release/app-release.apk
-cp app/build/outputs/apk/release/app-release.apk app/Mkweli_v1.0.12.apk
+cp app/build/outputs/apk/release/app-release.apk app/Mkweli_v1.0.13.apk
 ```
 
 `postinstall` applies `scripts/patch-rnfs-promise.js` so `react-native-fs` works with RN 0.83 (null error codes + multi-hop redirects).

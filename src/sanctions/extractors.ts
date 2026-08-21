@@ -4,6 +4,7 @@
  *
  * Live CSV formats (verified 2026-07):
  *   EU  FSD  — semicolon-delimited + BOM; name column `Naal_wholename`
+ *              (OpenSanctions names.txt / targets.simple.csv also accepted)
  *   UK  OFSI — comma-delimited; optional "Report Date:" preamble; names in
  *              `Name 1`…`Name 6` (joined in that order, empties skipped)
  *   USA OFAC — comma-delimited SDN.CSV with NO header; EntNum at 0, name at 1
@@ -448,10 +449,11 @@ function resolveCsvNameIndexes(
       for (const c of exact) {
         const idx = normalized.indexOf(c);
         if (idx !== -1) {
+          const aliasIdx = normalized.indexOf('aliases');
           return {
             indexes: [idx],
             headerless: false,
-            aliasIndex: null,
+            aliasIndex: aliasIdx >= 0 ? aliasIdx : null,
             plainLines: false,
           };
         }
@@ -466,6 +468,15 @@ function resolveCsvNameIndexes(
           headerless: false,
           aliasIndex: null,
           plainLines: false,
+        };
+      }
+      // OpenSanctions names.txt — one name per line, no header.
+      if (firstRaw.length >= 2) {
+        return {
+          indexes: [0],
+          headerless: true,
+          aliasIndex: null,
+          plainLines: true,
         };
       }
       return null;
@@ -625,7 +636,6 @@ export function extractCsvNamesFromChunk(
       // If that yields plainLines, names may contain commas — use full line text.
       let resolved = resolveCsvNameIndexes(sourceId, fields);
       if (
-        sourceId === 'usa' &&
         resolved?.plainLines &&
         fields.length > 1 &&
         !/^\d+$/.test((fields[0] ?? '').trim())

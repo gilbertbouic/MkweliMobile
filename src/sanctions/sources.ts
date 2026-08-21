@@ -21,6 +21,11 @@ export interface SanctionsSource {
   alternateUrls?: string[];
   /** File name used for temporary download artifacts (deleted after parse). */
   tempFileName: string;
+  /**
+   * Abort a URL if no response headers / first byte arrive within this many ms,
+   * then try the next transport or fallback URL. Default is applied in file I/O.
+   */
+  firstByteTimeoutMs?: number;
 }
 
 export const SANCTIONS_SOURCES: SanctionsSource[] = [
@@ -52,8 +57,17 @@ export const SANCTIONS_SOURCES: SanctionsSource[] = [
   {
     id: 'eu',
     label: 'EU',
+    // Official FSD CSV. webgate.ec.europa.eu frequently hangs or is unreachable
+    // (TLS / geo / OEM stacks) — downloads abort after firstByteTimeoutMs, then
+    // OpenSanctions CDN mirrors of the same EU Financial Sanctions Files are tried.
     url: 'https://webgate.ec.europa.eu/fsd/fsf/public/files/csvFullSanctionsList/content?token=dG9rZW4tMjAxNw',
+    alternateUrls: [
+      'https://data.opensanctions.org/datasets/latest/eu_fsf/names.txt',
+      'https://data.opensanctions.org/datasets/latest/eu_fsf/targets.simple.csv',
+    ],
     tempFileName: 'eu-full-sanctions.csv',
+    // Official host often never responds; fail it quickly and use the CDN.
+    firstByteTimeoutMs: 15_000,
   },
   {
     id: 'uk',

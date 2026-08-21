@@ -133,6 +133,37 @@ describe('App Component', () => {
       const hasScreenButton = JSON.stringify(tree).includes('Screen');
       expect(hasScreenButton).toBe(true);
     });
+
+    test('renders Clear all searches button instead of demo shortcuts', () => {
+      const tree = JSON.stringify(root.toJSON());
+      expect(tree).toContain('Clear all searches');
+      expect(tree).not.toContain('Demo hit');
+      expect(tree).not.toContain('Demo clear');
+      expect(tree).not.toContain('Try a demo');
+    });
+
+    test('Clear all searches resets the query field', async () => {
+      const instance = root.root;
+      const textInputs = instance.findAllByType('TextInput' as any);
+      expect(textInputs.length).toBeGreaterThan(0);
+
+      await ReactTestRenderer.act(async () => {
+        textInputs[0].props.onChangeText('Vladimir Putin');
+      });
+      expect(textInputs[0].props.value).toBe('Vladimir Putin');
+
+      const clearButtons = instance.findAll(
+        node =>
+          node.props?.accessibilityLabel ===
+          'Clear the search field, results, and recent searches',
+      );
+      expect(clearButtons.length).toBeGreaterThan(0);
+
+      await ReactTestRenderer.act(async () => {
+        clearButtons[0].props.onPress();
+      });
+      expect(textInputs[0].props.value).toBe('');
+    });
   });
 
   describe('UI Responsiveness', () => {

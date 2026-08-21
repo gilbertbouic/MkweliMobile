@@ -41,6 +41,9 @@ const en = {
   updateLists: 'Update lists',
   placeholderName: 'Enter name to screen',
   screen: 'Screen',
+  clearAllSearches: 'Clear all searches',
+  clearAllSearchesA11y: 'Clear the search field, results, and recent searches',
+  recentSearches: 'Recent searches',
   resultSanctioned: 'Sanctioned: Match found in database.',
   resultStrong:
     'Strong match: {{count}} high-confidence name(s) on the lists.',
@@ -127,6 +130,10 @@ const fr: Record<TranslationKey, string> = {
   updateLists: 'Mettre à jour les listes',
   placeholderName: 'Saisir un nom à contrôler',
   screen: 'Contrôler',
+  clearAllSearches: 'Effacer toutes les recherches',
+  clearAllSearchesA11y:
+    'Effacer le champ de recherche, les résultats et les recherches récentes',
+  recentSearches: 'Recherches récentes',
   resultSanctioned: 'Sanctionné : correspondance trouvée dans la base.',
   resultStrong:
     'Correspondance forte : {{count}} nom(s) à forte confiance sur les listes.',
@@ -214,6 +221,10 @@ const pt: Record<TranslationKey, string> = {
   updateLists: 'Atualizar listas',
   placeholderName: 'Introduza o nome a verificar',
   screen: 'Verificar',
+  clearAllSearches: 'Limpar todas as pesquisas',
+  clearAllSearchesA11y:
+    'Limpar o campo de pesquisa, os resultados e as pesquisas recentes',
+  recentSearches: 'Pesquisas recentes',
   resultSanctioned: 'Sancionado: correspondência encontrada na base de dados.',
   resultStrong:
     'Correspondência forte: {{count}} nome(s) de elevada confiança nas listas.',
@@ -301,6 +312,10 @@ const es: Record<TranslationKey, string> = {
   updateLists: 'Actualizar listas',
   placeholderName: 'Introduzca el nombre a verificar',
   screen: 'Verificar',
+  clearAllSearches: 'Borrar todas las búsquedas',
+  clearAllSearchesA11y:
+    'Borrar el campo de búsqueda, los resultados y las búsquedas recientes',
+  recentSearches: 'Búsquedas recientes',
   resultSanctioned: 'Sancionado: coincidencia encontrada en la base de datos.',
   resultStrong:
     'Coincidencia fuerte: {{count}} nombre(s) de alta confianza en las listas.',

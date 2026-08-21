@@ -67,6 +67,7 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
   const {t, locale} = useLanguage();
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<ScreenResult | null>(null);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [booting, setBooting] = useState(true);
   const [meta, setMeta] = useState<SanctionsMeta | null>(null);
@@ -212,19 +213,37 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
     return () => sub.remove();
   }, [maybeAutoUpdate, refreshMeta]);
 
-  const handleSearch = () => {
+  const runScreening = (name: string) => {
     setLoading(true);
     setResult(null);
     // Defer so the spinner paints; token search is sync on the JS thread.
     setTimeout(() => {
-      setResult(screenName(query));
+      setResult(screenName(name));
       setLoading(false);
+      const q = name.trim();
+      if (q) {
+        setRecentSearches(prev => [q, ...prev.filter(s => s !== q)].slice(0, 15));
+      }
     }, 50);
+  };
+
+  const handleSearch = () => {
+    runScreening(query);
+  };
+
+  const handleClearAllSearches = () => {
+    setQuery('');
+    setResult(null);
+    setRecentSearches([]);
+    setLoading(false);
   };
 
   const handleUpdateLists = () => {
     void runListUpdate('manual');
   };
+
+  const canClearSearches =
+    query.length > 0 || result !== null || recentSearches.length > 0;
 
   const stale = meta ? isListsStale(meta) : false;
   const totalNames = meta
@@ -358,6 +377,56 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
             </Text>
           ) : null}
         </View>
+
+        <TouchableOpacity
+          style={[
+            styles.clearSearchesButton,
+            !canClearSearches && styles.updateButtonDisabled,
+          ]}
+          onPress={handleClearAllSearches}
+          disabled={!canClearSearches}
+          accessibilityRole="button"
+          accessibilityLabel={t('clearAllSearchesA11y')}>
+          <Text style={styles.buttonText}>{t('clearAllSearches')}</Text>
+        </TouchableOpacity>
+
+        {recentSearches.length > 0 ? (
+          <View style={styles.recentBox}>
+            <Text
+              style={
+                isDarkMode ? styles.tokensHintDark : styles.tokensHintLight
+              }>
+              {t('recentSearches')}
+            </Text>
+            <View style={styles.recentList}>
+              {recentSearches.map(name => (
+                <TouchableOpacity
+                  key={name}
+                  style={[
+                    styles.recentChip,
+                    isDarkMode ? styles.recentChipDark : styles.recentChipLight,
+                  ]}
+                  onPress={() => {
+                    setQuery(name);
+                    runScreening(name);
+                  }}
+                  disabled={updating}
+                  accessibilityRole="button"
+                  accessibilityLabel={name}>
+                  <Text
+                    style={
+                      isDarkMode
+                        ? styles.recentChipTextDark
+                        : styles.recentChipTextLight
+                    }
+                    numberOfLines={1}>
+                    {name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        ) : null}
 
         <View style={styles.searchContainer}>
           <TextInput
@@ -622,6 +691,50 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 12,
     lineHeight: 18,
+  },
+  clearSearchesButton: {
+    backgroundColor: '#C62828',
+    marginHorizontal: 12,
+    marginTop: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+    alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  recentBox: {
+    marginHorizontal: 12,
+    marginTop: 8,
+  },
+  recentList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 6,
+  },
+  recentChip: {
+    maxWidth: '100%',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  recentChipLight: {
+    backgroundColor: '#FFF',
+    borderColor: '#CCC',
+  },
+  recentChipDark: {
+    backgroundColor: '#333',
+    borderColor: '#555',
+  },
+  recentChipTextLight: {
+    fontSize: 13,
+    color: '#333',
+  },
+  recentChipTextDark: {
+    fontSize: 13,
+    color: '#EEE',
   },
   searchContainer: {
     flexDirection: 'row',
