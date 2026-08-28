@@ -1,7 +1,7 @@
 # Mkweli Mobile
 
-Open-source **AML name screening** app for Android (and iOS).  
-Distributed via **GitHub** as a signed APK — **not** on the Google Play Store. Works on Google and non-Google devices (including Huawei without GMS).
+**AML name screening** app for Android (and iOS).  
+Distributed as a signed APK from the product site — **not** on the Google Play Store. Works on Google and non-Google devices (including Huawei without GMS).
 
 | | |
 |---|---|
@@ -102,9 +102,9 @@ scripts/                # postinstall patches
 ## Notes
 
 - New Architecture is **off** (`newArchEnabled=false`) for stability with current native modules.
-- No Google Play Services dependency — suitable for sideload / open-source distribution.
+- No Google Play Services dependency — suitable for sideload / non-Play distribution.
 - Screening is **not** fuzzy matching and is **not** a full KYC system; follow your organisation’s compliance policy.
 
 ## License
 
-See repository ownership on GitHub: [gilbertbouic/MkweliMobile](https://github.com/gilbertbouic/MkweliMobile).
+Copyright © 2026 Mkweli. All rights reserved. Source in this repository is for product development and is not licensed for reuse.
