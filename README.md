@@ -5,11 +5,11 @@ Distributed as a signed APK from the product site — **not** on the Google Play
 
 | | |
 |---|---|
-| **Version** | **1.0.14** (`versionCode` 14) |
+| **Version** | **1.0.15** (`versionCode` 15) |
 | **Package** | `com.mkwelimobile` |
 | **Product site** | **[aml.mkweli.tech](https://aml.mkweli.tech/)** |
-| **Download APK** | **[Mkweli_v1.0.14.apk](https://aml.mkweli.tech/Mkweli_v1.0.14.apk)** (official host only) |
-| **SHA-256** | `d45f6cb26965bfbf6173c897be400096a945f71c9bf05b63b540339f919b9f18` |
+| **Download APK** | **[Mkweli_v1.0.15.apk](https://aml.mkweli.tech/Mkweli_v1.0.15.apk)** (official host only) |
+| **SHA-256** | `6801a6ef29cfbffb4e4765ded91893cf49daeff0df238b2136d580a53ce8bf98` |
 | **Support** | [support@mkweli.tech](mailto:support@mkweli.tech) |
 | **Stack** | React Native 0.83 · Hermes · minSdk 24 |
 
@@ -18,6 +18,7 @@ Distributed as a signed APK from the product site — **not** on the Google Play
 - Screen a person or organisation name against **UN**, **EU**, **UK (FCDO)**, and **USA (OFAC SDN)** lists
 - **Token matching** (name parts, any order) with ranked strong/possible scores; surname-only and partial queries supported
 - **Auto-update every 30 days** on open when lists are stale or still seed data (manual **Update lists** anytime)
+- **Names loaded** and the post-update **total names** line always show the same figure (sum of UN / EU / UK / USA)
 - Offline screening after the first successful download (or using bundled seed names)
 - UI languages: **EN / FR / PT / ES**
 - Temporary download files are deleted after parse; per-source failures keep the previous good list
@@ -33,7 +34,7 @@ Distributed as a signed APK from the product site — **not** on the Google Play
 
 ## Install the APK (end users)
 
-1. Download **[Mkweli_v1.0.14.apk](https://aml.mkweli.tech/Mkweli_v1.0.14.apk)** from the official product site.
+1. Download **[Mkweli_v1.0.15.apk](https://aml.mkweli.tech/Mkweli_v1.0.15.apk)** from the official product site.
 2. Optionally verify the SHA-256 above matches the file you downloaded.
 3. On Android, allow install from the browser/file manager if prompted.
 4. Open the app on Wi‑Fi so lists can auto-update (USA can take a minute if using the CDN fallback).
@@ -79,7 +80,7 @@ Signing is configured via `android/gradle.properties` (`MYAPP_UPLOAD_*`) and the
 cd android
 ./gradlew :app:assembleRelease
 # Output: android/app/build/outputs/apk/release/app-release.apk
-cp app/build/outputs/apk/release/app-release.apk app/Mkweli_v1.0.14.apk
+cp app/build/outputs/apk/release/app-release.apk app/Mkweli_v1.0.15.apk
 ```
 
 `postinstall` applies `scripts/patch-rnfs-promise.js` so `react-native-fs` works with RN 0.83 (null error codes + multi-hop redirects).
