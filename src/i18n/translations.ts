@@ -26,7 +26,7 @@ const en = {
   loadingData: 'Loading sanctions data…',
   sanctionsLists: 'Sanctions lists',
   lastUpdate: 'Last update: {{date}}',
-  namesLoaded: 'Names loaded: ~{{count}} (UN / EU / UK / USA)',
+  namesLoaded: 'Names loaded: {{count}} (UN / EU / UK / USA)',
   bundledSeed: 'Bundled seed data (not yet updated)',
   seedSuffix: ' (seed)',
   staleNotice:
@@ -97,7 +97,7 @@ const en = {
     'Lists ship with the app as seed data. Every time you open the app, if lists are older than 30 days (or still seed data), Mkweli automatically downloads and parses the latest official lists when the device is online.\n\nYou can also refresh at any time:\n1. Ensure the device has internet access.\n2. On the main screen, open the Sanctions lists card.\n3. Tap Update lists.\n4. Wait while each source downloads (UN, EU, UK, USA). Progress shows for each step.\n5. When finished, only names are kept. Temporary download files are deleted. Previous lists for a source are replaced only if that source updates successfully.\n\nIf a source fails (network error, server issue), the app keeps the last good list for that source. You can try Update lists again later.\n\nAn orange notice appears if lists are older than 30 days or still using bundled seed data.',
   sectionStatusTitle: 'Understanding list status',
   sectionStatusBody:
-    '• Last update — when any successful download last completed.\n• Names loaded — approximate total names across all sources.\n• Source chips (UN / EU / UK / USA) — count of names per list. “(seed)” means the built-in data is still in use for that source. A warning mark means the last update for that source failed.',
+    '• Last update — when any successful download last completed.\n• Names loaded — total names across all sources (same figure shown after Update lists).\n• Source chips (UN / EU / UK / USA) — count of names per list. “(seed)” means the built-in data is still in use for that source. A warning mark means the last update for that source failed.',
   sectionOfflineTitle: 'Offline use',
   sectionOfflineBody:
     'Screening works offline using the names already on the device (bundled seed or last successful download). Updating lists requires internet. The USA (OFAC) file is large and may take several minutes on a slow connection.',
@@ -114,7 +114,7 @@ const fr: Record<TranslationKey, string> = {
   loadingData: 'Chargement des listes de sanctions…',
   sanctionsLists: 'Listes de sanctions',
   lastUpdate: 'Dernière mise à jour : {{date}}',
-  namesLoaded: 'Noms chargés : ~{{count}} (ONU / UE / RU / USA)',
+  namesLoaded: 'Noms chargés : {{count}} (ONU / UE / RU / USA)',
   bundledSeed: 'Données intégrées (pas encore mises à jour)',
   seedSuffix: ' (intégrée)',
   staleNotice:
@@ -188,7 +188,7 @@ const fr: Record<TranslationKey, string> = {
     'Des listes de base sont fournies avec l’application. À chaque ouverture, si les listes ont plus de 30 jours (ou sont encore intégrées), Mkweli télécharge et analyse automatiquement les listes officielles lorsque l’appareil est en ligne.\n\nVous pouvez aussi actualiser à tout moment :\n1. Vérifiez que l’appareil a accès à Internet.\n2. Sur l’écran principal, ouvrez la carte Listes de sanctions.\n3. Appuyez sur Mettre à jour les listes.\n4. Attendez le téléchargement de chaque source (ONU, UE, RU, USA). La progression s’affiche.\n5. À la fin, seuls les noms sont conservés. Les fichiers temporaires sont supprimés. Les listes précédentes d’une source ne sont remplacées que si la mise à jour de cette source réussit.\n\nSi une source échoue (réseau, serveur), l’application conserve la dernière bonne liste pour cette source. Réessayez plus tard.\n\nUn message orange s’affiche si les listes ont plus de 30 jours ou utilisent encore les données intégrées.',
   sectionStatusTitle: 'Comprendre l’état des listes',
   sectionStatusBody:
-    '• Dernière mise à jour — date du dernier téléchargement réussi.\n• Noms chargés — total approximatif sur toutes les sources.\n• Pastilles de source (ONU / UE / RU / USA) — nombre de noms par liste. « (intégrée) » signifie que les données fournies sont encore utilisées. Un avertissement indique un échec de la dernière mise à jour pour cette source.',
+    '• Dernière mise à jour — date du dernier téléchargement réussi.\n• Noms chargés — total sur toutes les sources (même chiffre qu’après Mettre à jour les listes).\n• Pastilles de source (ONU / UE / RU / USA) — nombre de noms par liste. « (intégrée) » signifie que les données fournies sont encore utilisées. Un avertissement indique un échec de la dernière mise à jour pour cette source.',
   sectionOfflineTitle: 'Utilisation hors ligne',
   sectionOfflineBody:
     'Le contrôle fonctionne hors ligne avec les noms déjà présents sur l’appareil (données intégrées ou dernier téléchargement réussi). La mise à jour des listes nécessite Internet. Le fichier USA (OFAC) est volumineux et peut prendre plusieurs minutes sur une connexion lente.',
@@ -205,7 +205,7 @@ const pt: Record<TranslationKey, string> = {
   loadingData: 'A carregar dados de sanções…',
   sanctionsLists: 'Listas de sanções',
   lastUpdate: 'Última atualização: {{date}}',
-  namesLoaded: 'Nomes carregados: ~{{count}} (ONU / UE / RU / EUA)',
+  namesLoaded: 'Nomes carregados: {{count}} (ONU / UE / RU / EUA)',
   bundledSeed: 'Dados incluídos (ainda não atualizados)',
   seedSuffix: ' (incluída)',
   staleNotice:
@@ -279,7 +279,7 @@ const pt: Record<TranslationKey, string> = {
     'As listas são fornecidas com a aplicação como dados iniciais. Sempre que abrir a aplicação, se as listas tiverem mais de 30 dias (ou ainda forem dados incluídos), o Mkweli descarrega e analisa automaticamente as listas oficiais quando o dispositivo está online.\n\nTambém pode atualizar a qualquer momento:\n1. Certifique-se de que o dispositivo tem Internet.\n2. No ecrã principal, abra o cartão Listas de sanções.\n3. Toque em Atualizar listas.\n4. Aguarde o download de cada fonte (ONU, UE, RU, EUA). O progresso é mostrado.\n5. No fim, apenas os nomes são guardados. Os ficheiros temporários são eliminados. As listas anteriores de uma fonte só são substituídas se a atualização dessa fonte for bem-sucedida.\n\nSe uma fonte falhar (rede, servidor), a aplicação mantém a última lista válida dessa fonte. Pode tentar novamente mais tarde.\n\nUm aviso laranja aparece se as listas tiverem mais de 30 dias ou ainda usarem os dados incluídos.',
   sectionStatusTitle: 'Compreender o estado das listas',
   sectionStatusBody:
-    '• Última atualização — quando o último download bem-sucedido foi concluído.\n• Nomes carregados — total aproximado em todas as fontes.\n• Etiquetas de fonte (ONU / UE / RU / EUA) — contagem de nomes por lista. “(incluída)” significa que os dados incorporados ainda estão em uso. Um aviso indica falha na última atualização dessa fonte.',
+    '• Última atualização — quando o último download bem-sucedido foi concluído.\n• Nomes carregados — total em todas as fontes (o mesmo valor após Atualizar listas).\n• Etiquetas de fonte (ONU / UE / RU / EUA) — contagem de nomes por lista. “(incluída)” significa que os dados incorporados ainda estão em uso. Um aviso indica falha na última atualização dessa fonte.',
   sectionOfflineTitle: 'Utilização offline',
   sectionOfflineBody:
     'A triagem funciona offline com os nomes já no dispositivo (dados incluídos ou último download bem-sucedido). Atualizar listas exige Internet. O ficheiro dos EUA (OFAC) é grande e pode demorar vários minutos numa ligação lenta.',
@@ -296,7 +296,7 @@ const es: Record<TranslationKey, string> = {
   loadingData: 'Cargando datos de sanciones…',
   sanctionsLists: 'Listas de sanciones',
   lastUpdate: 'Última actualización: {{date}}',
-  namesLoaded: 'Nombres cargados: ~{{count}} (ONU / UE / RU / EE. UU.)',
+  namesLoaded: 'Nombres cargados: {{count}} (ONU / UE / RU / EE. UU.)',
   bundledSeed: 'Datos incluidos (aún no actualizados)',
   seedSuffix: ' (incluida)',
   staleNotice:
@@ -370,7 +370,7 @@ const es: Record<TranslationKey, string> = {
     'Las listas se incluyen con la aplicación como datos iniciales. Cada vez que abra la aplicación, si las listas tienen más de 30 días (o siguen siendo datos incluidos), Mkweli descarga y analiza automáticamente las listas oficiales cuando el dispositivo está en línea.\n\nTambién puede actualizar en cualquier momento:\n1. Asegúrese de que el dispositivo tiene Internet.\n2. En la pantalla principal, abra la tarjeta Listas de sanciones.\n3. Pulse Actualizar listas.\n4. Espere a que se descargue cada fuente (ONU, UE, RU, EE. UU.). Se muestra el progreso.\n5. Al terminar, solo se guardan los nombres. Los archivos temporales se eliminan. Las listas anteriores de una fuente solo se reemplazan si la actualización de esa fuente tiene éxito.\n\nSi una fuente falla (red, servidor), la aplicación conserva la última lista válida de esa fuente. Puede reintentarlo más tarde.\n\nAparece un aviso naranja si las listas tienen más de 30 días o aún usan los datos incluidos.',
   sectionStatusTitle: 'Entender el estado de las listas',
   sectionStatusBody:
-    '• Última actualización — cuándo se completó la última descarga correcta.\n• Nombres cargados — total aproximado de todas las fuentes.\n• Etiquetas de fuente (ONU / UE / RU / EE. UU.) — cantidad de nombres por lista. “(incluida)” significa que aún se usan los datos integrados. Una advertencia indica que falló la última actualización de esa fuente.',
+    '• Última actualización — cuándo se completó la última descarga correcta.\n• Nombres cargados — total de todas las fuentes (el mismo valor tras Actualizar listas).\n• Etiquetas de fuente (ONU / UE / RU / EE. UU.) — cantidad de nombres por lista. “(incluida)” significa que aún se usan los datos integrados. Una advertencia indica que falló la última actualización de esa fuente.',
   sectionOfflineTitle: 'Uso sin conexión',
   sectionOfflineBody:
     'El cribado funciona sin conexión con los nombres ya presentes en el dispositivo (datos incluidos o última descarga correcta). Actualizar las listas requiere Internet. El archivo de EE. UU. (OFAC) es grande y puede tardar varios minutos con una conexión lenta.',

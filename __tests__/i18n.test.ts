@@ -40,6 +40,13 @@ describe('i18n translations', () => {
     expect(interpolate('{{ok}}/{{total}}', {ok: 3, total: 4})).toBe('3/4');
   });
 
+  test('namesLoaded has no tilde so it matches the update total names figure', () => {
+    for (const lang of LANGUAGES) {
+      expect(translations[lang.code].namesLoaded).not.toMatch(/~/);
+      expect(translations[lang.code].namesLoaded).toContain('{{count}}');
+    }
+  });
+
   test('French screen button differs from English', () => {
     expect(translations.fr.screen).toBe('Contrôler');
     expect(translations.en.screen).toBe('Screen');

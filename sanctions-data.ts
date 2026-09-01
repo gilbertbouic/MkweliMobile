@@ -6,7 +6,7 @@ import fullXsdNames from './assets/sanctions/full-xsd-names.json';
 import ukSanctionsNames from './assets/sanctions/uk-sanctions-names.json';
 import sdnNames from './assets/sanctions/sdn-names.json';
 import unSanctionsNames from './assets/sanctions/un-sanctions-names.json';
-import {loadAllNamesSet, loadMeta, type SanctionsMeta} from './src/sanctions/store';
+import {loadAllNamesSet, loadMeta, countNamesInMeta, type SanctionsMeta} from './src/sanctions/store';
 import {LIST_STALE_AFTER_DAYS} from './src/sanctions/sources';
 import {
   updateAllSanctionsLists,
@@ -151,8 +151,9 @@ export async function updateSanctionsLists(
   totalNames: number;
 }> {
   const {meta, results} = await updateAllSanctionsLists(onProgress);
-  const totalNames = await reloadSanctionsData();
-  return {meta, results, totalNames};
+  await reloadSanctionsData();
+  // Same figure as the "Names loaded" line (sum of per-source counts).
+  return {meta, results, totalNames: countNamesInMeta(meta)};
 }
 
 export type {
@@ -161,4 +162,4 @@ export type {
   SourceUpdateResult,
   ProgressCallback,
 };
-export {LIST_STALE_AFTER_DAYS};
+export {LIST_STALE_AFTER_DAYS, countNamesInMeta};

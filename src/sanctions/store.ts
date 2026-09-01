@@ -176,6 +176,22 @@ export async function saveMeta(meta: SanctionsMeta): Promise<void> {
 }
 
 /**
+ * Headline total for the UI: sum of each source's nameCount.
+ *
+ * Screening still dedupes names across lists in memory, but every displayed
+ * total (Names loaded + "total names" after update) uses this sum so the two
+ * figures never disagree. Chips add up to the same number.
+ */
+export function countNamesInMeta(
+  meta: SanctionsMeta | null | undefined,
+): number {
+  if (!meta?.sources) {
+    return 0;
+  }
+  return Object.values(meta.sources).reduce((n, s) => n + (s.nameCount || 0), 0);
+}
+
+/**
  * Load names for one source: downloaded copy if present, else bundled seed.
  * Handles both legacy JSON-array format and current NDJSON format.
  */

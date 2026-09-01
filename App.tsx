@@ -28,6 +28,7 @@ import {
   isListsStale,
   screenName,
   updateSanctionsLists,
+  countNamesInMeta,
   type SanctionsMeta,
   type ScreenResult,
   type UpdateProgress,
@@ -246,9 +247,7 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
     query.length > 0 || result !== null || recentSearches.length > 0;
 
   const stale = meta ? isListsStale(meta) : false;
-  const totalNames = meta
-    ? Object.values(meta.sources).reduce((n, s) => n + (s.nameCount || 0), 0)
-    : 0;
+  const totalNames = countNamesInMeta(meta);
 
   const progressText =
     progress != null
