@@ -1,0 +1,47 @@
+name: Build signed release APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install platform, build-tools, NDK
+        run: |
+          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "ndk;27.3.13750724"
+
+      - name: Install JS deps
+        run: npm ci
+
+      - name: Assemble signed release
+        working-directory: android
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk Mkweli_v1.0.15.apk
+          sha256sum Mkweli_v1.0.15.apk | tee apk-sha256.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mkweli_v1.0.15
+          path: |
+            Mkweli_v1.0.15.apk
+            apk-sha256.txt
+          if-no-files-found: error
