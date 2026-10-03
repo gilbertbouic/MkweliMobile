@@ -9,7 +9,7 @@ Distributed as a signed APK from the product site — **not** on the Google Play
 | **Package** | `com.mkwelimobile` |
 | **Product site** | **[aml.mkweli.tech](https://aml.mkweli.tech/)** |
 | **Download APK** | **[Mkweli_v1.0.16.apk](https://aml.mkweli.tech/Mkweli_v1.0.16.apk)** (official host only) |
-| **SHA-256** | `6801a6ef29cfbffb4e4765ded91893cf49daeff0df238b2136d580a53ce8bf98` |
+| **SHA-256** | `e1751cd8d9970499ee24f3f32edc33ac20c0c34e6dc59b085701a381fc767dbc` |
 | **Support** | [support@mkweli.tech](mailto:support@mkweli.tech) |
 | **Stack** | React Native 0.83 · Hermes · minSdk 24 |
 
