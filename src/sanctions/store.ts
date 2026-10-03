@@ -188,7 +188,23 @@ export function countNamesInMeta(
   if (!meta?.sources) {
     return 0;
   }
-  return Object.values(meta.sources).reduce((n, s) => n + (s.nameCount || 0), 0);
+  return Object.values(meta.sources).reduce(
+    (n, s) => n + (Number.isFinite(s?.nameCount) ? s.nameCount : 0),
+    0,
+  );
+}
+
+/**
+ * The only formatter for the headline total. Names loaded and the post-update
+ * "total names" line must both call this so grouping and rounding cannot drift.
+ */
+export function formatNameCount(count: number, locale?: string): string {
+  const safe = Number.isFinite(count) ? Math.max(0, Math.trunc(count)) : 0;
+  try {
+    return safe.toLocaleString(locale || "en-US");
+  } catch {
+    return String(safe);
+  }
 }
 
 /**

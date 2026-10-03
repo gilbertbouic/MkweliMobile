@@ -2,7 +2,7 @@
  * @format
  */
 
-import {countNamesInMeta, type SanctionsMeta} from '../src/sanctions/store';
+import {countNamesInMeta, formatNameCount, type SanctionsMeta} from '../src/sanctions/store';
 
 function source(
   id: SanctionsMeta['sources'][keyof SanctionsMeta['sources']]['id'],
@@ -49,5 +49,17 @@ describe('countNamesInMeta', () => {
       },
     } as SanctionsMeta;
     expect(countNamesInMeta(meta)).toBe(16);
+  });
+});
+
+describe('formatNameCount', () => {
+  test('formats the headline total the same way for both UI lines', () => {
+    expect(formatNameCount(105654, 'en-US')).toBe((105654).toLocaleString('en-US'));
+    expect(formatNameCount(105654, 'en-US')).toBe(formatNameCount(105654, 'en-US'));
+  });
+
+  test('truncates and rejects non-finite values so the two lines cannot diverge', () => {
+    expect(formatNameCount(10.9, 'en-US')).toBe('10');
+    expect(formatNameCount(Number.NaN, 'en-US')).toBe('0');
   });
 });

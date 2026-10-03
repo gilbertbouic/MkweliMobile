@@ -29,6 +29,7 @@ import {
   screenName,
   updateSanctionsLists,
   countNamesInMeta,
+  formatNameCount,
   type SanctionsMeta,
   type ScreenResult,
   type UpdateProgress,
@@ -74,10 +75,17 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
   const [meta, setMeta] = useState<SanctionsMeta | null>(null);
   const [updating, setUpdating] = useState(false);
   const [progress, setProgress] = useState<UpdateProgress | null>(null);
-  const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+  const [updateSummary, setUpdateSummary] = useState<{
+    mode: 'manual' | 'auto';
+    ok: number;
+    total: number;
+    failed: string;
+    error: string;
+  } | null>(null);
   const isDarkMode = useColorScheme() === 'dark';
   const updatingRef = useRef(false);
   const autoStartedRef = useRef(false);
+  const [updateMode, setUpdateMode] = useState<'manual' | 'auto' | null>(null);
 
   const formatDate = useCallback(
     (iso: string | null): string => {
@@ -110,50 +118,41 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
       }
       updatingRef.current = true;
       setUpdating(true);
-      setUpdateMessage(
-        mode === 'auto' ? t('autoUpdating') : null,
-      );
+      setUpdateMode(mode);
+      setUpdateSummary(null);
       setProgress(null);
       try {
-        const {meta: newMeta, results, totalNames} = await updateSanctionsLists(
+        const {meta: newMeta, results} = await updateSanctionsLists(
           p => setProgress(p),
         );
         setMeta(newMeta);
         const ok = results.filter(r => r.ok).length;
         const fail = results.filter(r => !r.ok);
-        if (fail.length) {
-          setUpdateMessage(
-            t(mode === 'auto' ? 'autoUpdatePartial' : 'updatePartial', {
-              ok,
-              total: results.length,
-              names: totalNames.toLocaleString(locale),
-              failed: fail.map(f => `${f.label} (${f.error})`).join('; '),
-            }),
-          );
-        } else {
-          setUpdateMessage(
-            t(mode === 'auto' ? 'autoUpdateOk' : 'updateOk', {
-              ok,
-              total: results.length,
-              names: totalNames.toLocaleString(locale),
-            }),
-          );
-        }
+        setUpdateSummary({
+          mode,
+          ok,
+          total: results.length,
+          failed: fail.map(f => `${f.label} (${f.error})`).join('; '),
+          error: '',
+        });
       } catch (err) {
         const message =
           err instanceof Error ? err.message : String(err ?? 'Update failed');
-        setUpdateMessage(
-          t(mode === 'auto' ? 'autoUpdateFailed' : 'updateFailed', {
-            error: message,
-          }),
-        );
+        setUpdateSummary({
+          mode,
+          ok: 0,
+          total: 0,
+          failed: '',
+          error: message,
+        });
         await refreshMeta();
       } finally {
         updatingRef.current = false;
         setUpdating(false);
+        setUpdateMode(null);
       }
     },
-    [locale, refreshMeta, t],
+    [refreshMeta, t],
   );
 
   /** Auto-download when lists are bundled seed or older than 30 days. */
@@ -248,6 +247,35 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
 
   const stale = meta ? isListsStale(meta) : false;
   const totalNames = countNamesInMeta(meta);
+  // Same string as the post-update "{{names}} total names" figure.
+  const namesLabel = formatNameCount(totalNames, locale);
+  const updateMessage = (() => {
+    if (!updateSummary) {
+      return updating ? null : null;
+    }
+    if (updateSummary.error) {
+      return t(
+        updateSummary.mode === 'auto' ? 'autoUpdateFailed' : 'updateFailed',
+        {error: updateSummary.error},
+      );
+    }
+    if (updateSummary.failed) {
+      return t(
+        updateSummary.mode === 'auto' ? 'autoUpdatePartial' : 'updatePartial',
+        {
+          ok: updateSummary.ok,
+          total: updateSummary.total,
+          names: namesLabel,
+          failed: updateSummary.failed,
+        },
+      );
+    }
+    return t(updateSummary.mode === 'auto' ? 'autoUpdateOk' : 'updateOk', {
+      ok: updateSummary.ok,
+      total: updateSummary.total,
+      names: namesLabel,
+    });
+  })();
 
   const progressText =
     progress != null
@@ -316,7 +344,7 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
           <Text
             style={isDarkMode ? styles.statusBodyDark : styles.statusBodyLight}>
             {t('namesLoaded', {
-              count: totalNames.toLocaleString(locale),
+              count: namesLabel,
             })}
           </Text>
           {stale ? <Text style={styles.staleText}>{t('staleNotice')}</Text> : null}
@@ -328,7 +356,7 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
                   style={
                     isDarkMode ? styles.sourceChipDark : styles.sourceChipLight
                   }>
-                  {s.label}: {s.nameCount.toLocaleString(locale)}
+                  {s.label}: {formatNameCount(s.nameCount, locale)}
                   {s.source === 'downloaded' ? '' : t('seedSuffix')}
                   {s.lastError ? ' ⚠' : ''}
                 </Text>
@@ -366,6 +394,15 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
             </View>
           ) : null}
 
+          {updating && updateMode === 'auto' && !updateMessage ? (
+            <Text
+              style={[
+                styles.updateMessage,
+                isDarkMode ? styles.statusBodyDark : styles.statusBodyLight,
+              ]}>
+              {t('autoUpdating')}
+            </Text>
+          ) : null}
           {updateMessage ? (
             <Text
               style={[

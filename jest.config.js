@@ -8,7 +8,7 @@ module.exports = {
     '!**/*.test.tsx',
     '!**/node_modules/**',
   ],
-  coverageThresholds: {
+  coverageThreshold: {
     global: {
       branches: 70,
       functions: 70,

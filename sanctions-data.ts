@@ -6,7 +6,7 @@ import fullXsdNames from './assets/sanctions/full-xsd-names.json';
 import ukSanctionsNames from './assets/sanctions/uk-sanctions-names.json';
 import sdnNames from './assets/sanctions/sdn-names.json';
 import unSanctionsNames from './assets/sanctions/un-sanctions-names.json';
-import {loadAllNamesSet, loadMeta, countNamesInMeta, type SanctionsMeta} from './src/sanctions/store';
+import {loadAllNamesSet, loadMeta, countNamesInMeta, formatNameCount, type SanctionsMeta} from './src/sanctions/store';
 import {LIST_STALE_AFTER_DAYS} from './src/sanctions/sources';
 import {
   updateAllSanctionsLists,
@@ -150,9 +150,10 @@ export async function updateSanctionsLists(
   results: SourceUpdateResult[];
   totalNames: number;
 }> {
-  const {meta, results} = await updateAllSanctionsLists(onProgress);
+  const {results} = await updateAllSanctionsLists(onProgress);
   await reloadSanctionsData();
-  // Same figure as the "Names loaded" line (sum of per-source counts).
+  // Re-read the file just written so the banner cannot use a stale in-memory copy.
+  const meta = await loadMeta();
   return {meta, results, totalNames: countNamesInMeta(meta)};
 }
 
@@ -162,4 +163,4 @@ export type {
   SourceUpdateResult,
   ProgressCallback,
 };
-export {LIST_STALE_AFTER_DAYS, countNamesInMeta};
+export {LIST_STALE_AFTER_DAYS, countNamesInMeta, formatNameCount};

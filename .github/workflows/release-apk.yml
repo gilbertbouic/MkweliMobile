@@ -33,15 +33,19 @@ jobs:
         working-directory: android
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
-      - name: Rename APK
+      - name: Rename APK from versionName
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk Mkweli_v1.0.15.apk
-          sha256sum Mkweli_v1.0.15.apk | tee apk-sha256.txt
+          VERSION=$(grep -oP 'versionName "\K[^"]+' android/app/build.gradle)
+          test -n "$VERSION"
+          cp android/app/build/outputs/apk/release/app-release.apk "Mkweli_v${VERSION}.apk"
+          sha256sum "Mkweli_v${VERSION}.apk" | tee apk-sha256.txt
+          echo "version=$VERSION" | tee apk-version.txt
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Mkweli_v1.0.15
+          name: mkweli-release-apk
           path: |
-            Mkweli_v1.0.15.apk
+            Mkweli_v*.apk
             apk-sha256.txt
+            apk-version.txt
           if-no-files-found: error
