@@ -19,12 +19,19 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install platform, build-tools, NDK
+      - name: Install Android platform, build-tools, NDK
         run: |
-          sdkmanager --install "platforms;android-34" "build-tools;34.0.0" "ndk;27.3.13750724"
+          set -euo pipefail
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}"
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          SM="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SM" ]; then
+            SM="$ANDROID_SDK_ROOT/cmdline-tools/16.0/bin/sdkmanager"
+          fi
+          yes | "$SM" --licenses >/dev/null || true
+          "$SM" --install "platforms;android-34" "build-tools;34.0.0" "ndk;27.3.13750724"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
 
       - name: Install JS deps
         run: npm ci
