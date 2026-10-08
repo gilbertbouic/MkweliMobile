@@ -3,6 +3,12 @@
 Notable changes to Mkweli Mobile, built from the git history. Dates are commit dates.
 Versions that have no dedicated commit (1.0.7, 1.0.10, 1.0.11) are not listed.
 
+## 1.0.17 (2026-10-08)
+- **New release signing key.** The previous key was exposed in this repo and is treated as compromised. Releases are now signed in CI from GitHub secrets with a new key plus an APK Signature Scheme v3 rotation lineage: Android 9+ moves to the new key (and then refuses updates signed only by the old one); Android 7–8 still verify the old key, so existing installs update without reinstalling. Keystores and passwords removed from the repo.
+- **Dependencies:** Dependabot security updates (fast-xml-parser, Babel, React Native CLI 20.2.0 incl. cli-platform-android, and transitive packages); removed unused fast-xml-parser, react-native-safe-area-context and @react-native/new-app-screen. `npm audit` critical findings: 2 → 0.
+- **CI and code health:** new CI workflow (lint, type-check, tests on every push to main and PR); ESLint config added and errors fixed; TypeScript errors fixed; unit tests no longer make real network downloads (fixes the Jest worker hang).
+- **Housekeeping:** old APKs (v1.0.8, v1.0.12–1.0.15) removed from the repo, README Git LFS note fixed, unused async-storage mock removed, this changelog added.
+
 ## 1.0.16 (2026-10-03)
 - "Names loaded" and the post-update total names line are now rendered from the same saved UN + EU + UK + USA sum, including after a language change.
 - The release workflow names the APK from `versionName` and installs the Android SDK pieces it needs; SHA-256 of the v1.0.16 APK recorded in the README.
