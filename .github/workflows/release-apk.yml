@@ -36,9 +36,88 @@ jobs:
       - name: Install JS deps
         run: npm ci
 
-      - name: Assemble signed release
+      # Signing material lives only in GitHub Actions secrets (see README > Release signing).
+      - name: Decode signing material from secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_SIGNING_LINEAGE_BASE64: ${{ secrets.ANDROID_SIGNING_LINEAGE_BASE64 }}
+          OLD_ANDROID_KEYSTORE_BASE64: ${{ secrets.OLD_ANDROID_KEYSTORE_BASE64 }}
+          OLD_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.OLD_ANDROID_KEYSTORE_PASSWORD }}
+          OLD_ANDROID_KEY_ALIAS: ${{ secrets.OLD_ANDROID_KEY_ALIAS }}
+          OLD_ANDROID_KEY_PASSWORD: ${{ secrets.OLD_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for v in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!v:-}" ]; then echo "::error::Missing repository secret $v"; exit 1; fi
+          done
+          SIGN_DIR="$RUNNER_TEMP/signing"
+          mkdir -p "$SIGN_DIR" && chmod 700 "$SIGN_DIR"
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$SIGN_DIR/release.p12"
+          if [ -n "${ANDROID_SIGNING_LINEAGE_BASE64:-}" ]; then
+            for v in OLD_ANDROID_KEYSTORE_BASE64 OLD_ANDROID_KEYSTORE_PASSWORD OLD_ANDROID_KEY_ALIAS OLD_ANDROID_KEY_PASSWORD; do
+              if [ -z "${!v:-}" ]; then echo "::error::Lineage is set but secret $v is missing"; exit 1; fi
+            done
+            printf '%s' "$ANDROID_SIGNING_LINEAGE_BASE64" | base64 -d > "$SIGN_DIR/signing.lineage"
+            printf '%s' "$OLD_ANDROID_KEYSTORE_BASE64" | base64 -d > "$SIGN_DIR/old.keystore"
+            echo "HAS_LINEAGE=true" >> "$GITHUB_ENV"
+          else
+            echo "HAS_LINEAGE=false" >> "$GITHUB_ENV"
+          fi
+          chmod 600 "$SIGN_DIR"/*
+          echo "SIGN_DIR=$SIGN_DIR" >> "$GITHUB_ENV"
+
+      - name: Assemble signed release (new key)
         working-directory: android
+        env:
+          MKWELI_UPLOAD_STORE_FILE: ${{ runner.temp }}/signing/release.p12
+          MKWELI_UPLOAD_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          MKWELI_UPLOAD_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          MKWELI_UPLOAD_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
+
+      # Key rotation: v2 signature with the old key (Android 7-8 cannot rotate keys),
+      # v3 signature with the new key + lineage (Android 9+), so installed apps keep updating.
+      - name: Re-sign with key rotation lineage (old -> new)
+        if: env.HAS_LINEAGE == 'true'
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          OLD_ANDROID_KEYSTORE_PASSWORD: ${{ secrets.OLD_ANDROID_KEYSTORE_PASSWORD }}
+          OLD_ANDROID_KEY_ALIAS: ${{ secrets.OLD_ANDROID_KEY_ALIAS }}
+          OLD_ANDROID_KEY_PASSWORD: ${{ secrets.OLD_ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          APKSIGNER="$ANDROID_HOME/build-tools/34.0.0/apksigner"
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          "$APKSIGNER" sign \
+            --rotation-min-sdk-version 28 \
+            --lineage "$SIGN_DIR/signing.lineage" \
+            --ks "$SIGN_DIR/old.keystore" --ks-key-alias "$OLD_ANDROID_KEY_ALIAS" \
+              --ks-pass env:OLD_ANDROID_KEYSTORE_PASSWORD --key-pass env:OLD_ANDROID_KEY_PASSWORD \
+            --next-signer \
+            --ks "$SIGN_DIR/release.p12" --ks-key-alias "$ANDROID_KEY_ALIAS" \
+              --ks-pass env:ANDROID_KEYSTORE_PASSWORD --key-pass env:ANDROID_KEY_PASSWORD \
+            --out "$RUNNER_TEMP/app-release-rotated.apk" "$APK"
+          mv "$RUNNER_TEMP/app-release-rotated.apk" "$APK"
+
+      - name: Verify APK signature
+        run: |
+          set -euo pipefail
+          APKSIGNER="$ANDROID_HOME/build-tools/34.0.0/apksigner"
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          "$APKSIGNER" verify --verbose --print-certs "$APK"
+          echo "--- Signer seen by Android 7-8 (API 24-27):"
+          "$APKSIGNER" verify --print-certs --max-sdk-version 27 "$APK" | grep 'certificate SHA-256'
+          echo "--- Signer seen by Android 9+ (API 28+):"
+          "$APKSIGNER" verify --print-certs --min-sdk-version 28 "$APK" | grep 'certificate SHA-256'
+
+      - name: Remove signing material
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/signing"
 
       - name: Rename APK from versionName
         run: |

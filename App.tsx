@@ -152,6 +152,9 @@ function AppContent({onOpenInstructions}: {onOpenInstructions: () => void}) {
         setUpdateMode(null);
       }
     },
+    // `t` is intentionally kept: it re-creates this callback (and the auto-update
+    // effects that depend on it) when the UI language changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [refreshMeta, t],
   );
 
