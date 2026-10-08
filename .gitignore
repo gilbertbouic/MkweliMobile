@@ -31,9 +31,13 @@ ios/build/
 DerivedData/
 
 # Native / tooling
+# Signing keys must never be committed (only the public RN debug key is allowed)
 *.keystore
+*.jks
+*.p12
+*.lineage
 !android/app/debug.keystore
-!android/keystores/*.keystore
+android/keystores/
 
 # Env / secrets (keep committed if project already relies on them)
 .env

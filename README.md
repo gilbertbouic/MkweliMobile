@@ -72,16 +72,14 @@ npm run android       # another terminal
 npm test
 ```
 
-### Release APK (maintainers)
+### Release signing (maintainers)
 
-Signing is configured via `android/gradle.properties` (`MYAPP_UPLOAD_*`) and the keystore under `android/keystores/` (not always published).
+No signing keys or passwords are stored in this repository.
 
-```bash
-cd android
-./gradlew :app:assembleRelease
-# Output: android/app/build/outputs/apk/release/app-release.apk
-cp app/build/outputs/apk/release/app-release.apk app/Mkweli_v1.0.16.apk
-```
+- **Where the key lives:** the release keystore, its passwords/alias, and the key-rotation lineage are stored only as GitHub Actions repository secrets (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `ANDROID_SIGNING_LINEAGE_BASE64`, plus `OLD_ANDROID_*` for the previous key). Secrets are write-only, so the maintainer keeps an offline backup of the same files.
+- **How releases are signed:** run the **Build signed release APK** workflow (Actions → *Build signed release APK* → *Run workflow*). It decodes the keystore from secrets, runs `./gradlew :app:assembleRelease`, then re-signs with `apksigner` using the signing lineage, verifies the signature, deletes the key material, and uploads `Mkweli_v<versionName>.apk` + its SHA-256 as an artifact.
+- **Key rotation (October 2026):** the previous release key was exposed in this public repo and is treated as compromised. The next release after v1.0.16 (and every later one) is signed with a new key using APK Signature Scheme v3 key rotation: Android 9+ devices verify the new key via the lineage (and, once updated, will not accept updates signed only by the old key); Android 7.0–8.1 devices still verify the v2 signature made with the old key, so existing installs keep updating without a reinstall. Drop the old signer once `minSdkVersion` is raised to 28.
+- **Local release builds:** set `MKWELI_UPLOAD_STORE_FILE` (absolute path), `MKWELI_UPLOAD_STORE_PASSWORD`, `MKWELI_UPLOAD_KEY_ALIAS`, `MKWELI_UPLOAD_KEY_PASSWORD` as environment variables or in your personal `~/.gradle/gradle.properties` (never in the repo). Without them `assembleRelease` produces an unsigned APK; it never falls back to the debug key. Apply the lineage with `apksigner sign --rotation-min-sdk-version 28 --lineage …` as in `.github/workflows/release-apk.yml`.
 
 `postinstall` applies `scripts/patch-rnfs-promise.js` so `react-native-fs` works with RN 0.83 (null error codes + multi-hop redirects).
 
