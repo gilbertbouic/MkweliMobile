@@ -18,9 +18,10 @@ android/local.properties
 *.hprof
 .cxx/
 
-# Keep only the current release APK name in git (older builds are obsolete)
-android/app/Mkweli_v1.0.[0-7].apk
-android/app/app-*.apk
+# Release APKs are not kept in git: they are built by the "Build signed release
+# APK" workflow and published on https://aml.mkweli.tech/
+*.apk
+*.aab
 
 # iOS
 ios/Pods/

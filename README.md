@@ -54,9 +54,10 @@ ABIs included: **armeabi-v7a** + **arm64-v8a** (typical phones). Not on the Goog
 ```bash
 git clone https://github.com/gilbertbouic/MkweliMobile.git
 cd MkweliMobile
-git lfs pull          # required for the release APK
 npm install           # runs postinstall patch for react-native-fs
 ```
+
+Git LFS is not needed: release APKs are not stored in this repo. They are built by the **Build signed release APK** workflow and published on [aml.mkweli.tech](https://aml.mkweli.tech/). See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ### Run
 
@@ -92,7 +93,7 @@ sanctions-data.ts       # Screening API + seed load
 src/sanctions/          # Download, parse, store (NDJSON)
 src/i18n/               # EN / FR / PT / ES
 assets/sanctions/       # Bundled seed name lists (*-names.json only)
-android/                # Android project + release APK
+android/                # Android project
 ios/                    # iOS project
 __tests__/              # Jest tests
 scripts/                # postinstall patches
