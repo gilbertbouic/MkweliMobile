@@ -6,7 +6,6 @@
 import React from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 declare const performance: any;
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const rnfsMock = require('../__mocks__/react-native-fs');
 import App from '../App';
 import { isSanctioned, allSanctionedNames } from '../sanctions-data';

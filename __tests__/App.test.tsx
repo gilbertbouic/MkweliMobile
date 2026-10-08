@@ -3,10 +3,9 @@
  */
 
 import React from 'react';
-import ReactTestRenderer, { ReactTestInstance } from 'react-test-renderer';
+import ReactTestRenderer from 'react-test-renderer';
 import App from '../App';
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const rnfsMock = require('../__mocks__/react-native-fs');
 
 describe('App Component', () => {
@@ -209,8 +208,7 @@ describe('App Component', () => {
  * Integration tests for the screening workflow
  */
 describe('App Screening Workflow Integration', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const rnfs = require('../__mocks__/react-native-fs');
+    const rnfs = require('../__mocks__/react-native-fs');
 
   beforeEach(() => {
     if (typeof rnfs.__reset === 'function') {

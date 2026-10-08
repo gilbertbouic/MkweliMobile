@@ -21,6 +21,7 @@ module.exports = {
     '**/__tests__/**/*.test.tsx',
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
+  setupFiles: ['<rootDir>/jest.setup.js'],
   setupFilesAfterEnv: [],
   testTimeout: 10000,
   verbose: true,
