@@ -570,7 +570,7 @@ export async function streamFileUtf8(
   const stat = await RNFS.stat(path);
   const size = Number(stat.size);
   let offset = 0;
-  let pending = new Uint8Array(0);
+  let pending: Uint8Array = new Uint8Array(0);
 
   while (offset < size) {
     const length = Math.min(chunkBytes, size - offset);

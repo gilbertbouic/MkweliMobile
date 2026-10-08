@@ -213,7 +213,7 @@ describe('Real-World AML Screening Scenarios', () => {
       expect(() => {
         try {
           isSanctioned(null as unknown as string);
-        } catch (e) {
+        } catch {
           // If it throws, that's okay as long as it doesn't crash the app
         }
       }).not.toThrow();
@@ -221,7 +221,7 @@ describe('Real-World AML Screening Scenarios', () => {
       expect(() => {
         try {
           isSanctioned(undefined as unknown as string);
-        } catch (e) {
+        } catch {
           // If it throws, that's okay as long as it doesn't crash the app
         }
       }).not.toThrow();
